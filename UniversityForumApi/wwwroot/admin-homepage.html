@@ -1,0 +1,380 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 60px;
+            background-color: #2c3e50;
+            height: 100vh;
+            text-align: center;
+            padding-top: 20px;
+        }
+
+            .sidebar img {
+                width: 40px;
+                margin: 20px 0;
+                cursor: pointer;
+            }
+
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .post {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+            .post-header img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                margin-right: 10px;
+            }
+
+        .post-actions {
+            margin-top: 10px;
+        }
+
+            .post-actions button {
+                margin-right: 10px;
+            }
+
+        .comment-form {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+            .comment-form input {
+                flex-grow: 1;
+                margin-right: 10px;
+            }
+
+        .comment-list {
+            margin-top: 10px;
+        }
+
+        .comment-item {
+            background-color: #f1f1f1;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .liked {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 40%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+            .popup textarea {
+                width: 100%;
+                height: 100px;
+                margin-bottom: 10px;
+            }
+
+        .notification-popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 10%;
+            width: 300px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+            .notification-item:last-child {
+                border-bottom: none;
+            }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <img src="https://via.placeholder.com/40" alt="Logo CMC">
+        <img src="https://via.placeholder.com/40" alt="Trang chủ">
+        <img src="https://via.placeholder.com/40" alt="Lượt thích" onclick="showNotifications('likes')">
+        <img src="https://via.placeholder.com/40" alt="Bình luận" onclick="showNotifications('comments')">
+        <img src="https://via.placeholder.com/40" alt="Đăng bài" onclick="openPostPopup()">
+        <img src="https://via.placeholder.com/40" alt="Duyệt bài viết" onclick="window.location.href='review.html'">
+    </div>
+    <div class="content">
+        <h2>Trang chủ Admin</h2>
+        <div id="posts-container"></div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="post-popup">
+        <h3>Đăng bài mới</h3>
+        <form id="post-form">
+            <div class="mb-3">
+                <label for="post-title" class="form-label">Tiêu đề</label>
+                <input type="text" class="form-control" id="post-title" required>
+            </div>
+            <div class="mb-3">
+                <label for="post-content" class="form-label">Nội dung</label>
+                <textarea class="form-control" id="post-content" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Đăng bài</button>
+            <button type="button" class="btn btn-secondary" onclick="closePostPopup()">Hủy</button>
+        </form>
+    </div>
+
+    <div class="overlay" id="notification-overlay"></div>
+    <div class="notification-popup" id="notification-popup">
+        <h4>Thông báo</h4>
+        <div id="notification-list"></div>
+        <button class="btn btn-secondary mt-2 w-100" onclick="closeNotificationPopup()">Đóng</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_URL = 'https://localhost:7196/api';
+        const token = localStorage.getItem('token');
+
+        // Kiểm tra đăng nhập
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Tải danh sách bài viết
+        async function loadPosts() {
+            try {
+                const response = await axios.get(`${API_URL}/Post`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                console.log('API Response:', response.data);
+
+                const posts = response.data;
+                const container = document.getElementById('posts-container');
+                container.innerHTML = '';
+
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<p>Không có bài viết nào để hiển thị.</p>';
+                    return;
+                }
+
+                posts.forEach(post => {
+                    const comments = Array.isArray(post.comments) ? post.comments : [];
+                    const postElement = document.createElement('div');
+                    postElement.className = 'post';
+                    postElement.innerHTML = `
+                            <div class="post-header">
+                                <img src="https://via.placeholder.com/40" alt="Avatar">
+                                <div>
+                                    <strong>${post.author || 'Unknown'}</strong>
+                                    <small>${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</small>
+                                </div>
+                            </div>
+                            <h5>${post.title || 'Không có tiêu đề'}</h5>
+                            <p>${post.content || 'Không có nội dung'}</p>
+                            <div class="post-actions">
+                                <button class="btn btn-sm btn-outline-primary ${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})</button>
+                            </div>
+                            <div class="comment-form">
+                                <input type="text" class="form-control" id="comment-input-${post.id}" placeholder="Viết bình luận...">
+                                <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
+                            </div>
+                            <div class="comment-list">
+                                ${comments.length > 0 ? comments.map(comment => `
+                                    <div class="comment-item">
+                                        <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || 'Không có nội dung'}
+                                        <small> - ${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
+                                    </div>
+                                `).join('') : '<p>Chưa có bình luận nào.</p>'}
+                            </div>
+                        `;
+                    container.appendChild(postElement);
+                });
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('posts-container').innerHTML = '<p>Đã xảy ra lỗi khi tải bài viết.</p>';
+            }
+        }
+
+        // Thích hoặc bỏ thích bài viết
+        async function likePost(postId, button) {
+            try {
+                const response = await axios.post(`${API_URL}/Like/post/${postId}`, {}, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const { message, action } = response.data;
+                const likeCount = parseInt(button.textContent.match(/\d+/)?.[0]) || 0;
+
+                if (action === "Liked") {
+                    button.textContent = `Bỏ thích (${likeCount + 1})`;
+                    button.classList.remove('btn-outline-primary');
+                    button.classList.add('liked', 'btn-primary');
+                } else if (action === "Unliked") {
+                    button.textContent = `Thích (${likeCount - 1 >= 0 ? likeCount - 1 : 0})`;
+                    button.classList.remove('liked', 'btn-primary');
+                    button.classList.add('btn-outline-primary');
+                }
+
+                alert(message);
+                loadPosts(); // Tải lại để cập nhật trạng thái
+            } catch (error) {
+                console.error('Error liking post:', error);
+                alert('Không thể xử lý lượt thích');
+            }
+        }
+
+        // Thêm bình luận
+        async function addComment(postId) {
+            const content = document.getElementById(`comment-input-${postId}`).value;
+            if (!content) {
+                alert('Vui lòng nhập nội dung bình luận');
+                return;
+            }
+
+            try {
+                await axios.post(`${API_URL}/Comment`, {
+                    postId,
+                    content
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                document.getElementById(`comment-input-${postId}`).value = '';
+                loadPosts();
+            } catch (error) {
+                console.error('Error adding comment:', error);
+                alert('Không thể thêm bình luận');
+            }
+        }
+
+        // Đăng bài mới
+        const postForm = document.getElementById('post-form');
+        postForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+
+            try {
+                await axios.post(`${API_URL}/Post`, {
+                    title,
+                    content,
+                    type: "Text"
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                closePostPopup();
+                loadPosts();
+            } catch (error) {
+                console.error('Error posting:', error);
+                alert('Không thể đăng bài');
+            }
+        });
+
+        // Hiển thị/ẩn popup đăng bài
+        function openPostPopup() {
+            document.getElementById('post-popup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closePostPopup() {
+            document.getElementById('post-popup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // Hiển thị thông báo trong popup
+        async function showNotifications(type) {
+            try {
+                const response = await axios.get(`${API_URL}/Notification`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const notifications = response.data;
+                const notificationList = document.getElementById('notification-list');
+                notificationList.innerHTML = '';
+
+                const filteredNotifications = notifications.filter(n => {
+                    if (type === 'likes') return n.content.includes('thích');
+                    else if (type === 'comments') return n.content.includes('bình luận');
+                    return false;
+                });
+
+                if (filteredNotifications.length === 0) {
+                    notificationList.innerHTML = '<p>Không có thông báo nào.</p>';
+                } else {
+                    filteredNotifications.forEach(notification => {
+                        const item = document.createElement('div');
+                        item.className = 'notification-item';
+                        item.innerHTML = `
+                                <p>${notification.content}</p>
+                                <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                            `;
+                        notificationList.appendChild(item);
+                    });
+                }
+
+                document.getElementById('notification-popup').style.display = 'block';
+                document.getElementById('notification-overlay').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                alert('Không thể tải thông báo');
+            }
+        }
+
+        // Đóng popup thông báo
+        function closeNotificationPopup() {
+            document.getElementById('notification-popup').style.display = 'none';
+            document.getElementById('notification-overlay').style.display = 'none';
+        }
+
+        // Tải bài viết khi vào trang
+        loadPosts();
+    </script>
+</body>
+</html>
