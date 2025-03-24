@@ -31,7 +31,8 @@ namespace UniversityForumApi.Controllers
                     n.Id,
                     n.Content,
                     n.IsRead,
-                    n.CreatedAt
+                    n.CreatedAt,
+                    n.PostId // Thêm PostId vào response
                 })
                 .ToListAsync();
 

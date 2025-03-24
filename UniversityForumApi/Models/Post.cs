@@ -10,6 +10,7 @@
         public User User { get; set; }
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public List<Comment> Comments { get; set; } = new List<Comment>(); // Đã thêm từ bước trước
         public List<Like> Likes { get; set; } = new List<Like>(); // Thêm để lưu danh sách Likes
     }

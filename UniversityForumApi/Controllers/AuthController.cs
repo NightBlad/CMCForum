@@ -1,4 +1,5 @@
 ﻿using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization; // Thêm namespace này
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,7 +38,7 @@ namespace UniversityForumApi.Controllers
                 Contact = dto.Contact,
                 Username = dto.Username,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = "Student" // Mặc định là Student
+                Role = "Student"
             };
 
             _context.Users.Add(user);
@@ -54,7 +55,25 @@ namespace UniversityForumApi.Controllers
                 return Unauthorized("Invalid username or password");
 
             var token = GenerateJwtToken(user);
-            return Ok(new { Token = token, Role = user.Role }); // Thêm Role vào response
+            return Ok(new { Token = token, Role = user.Role });
+        }
+
+        [HttpGet("info")]
+        [Authorize] // Chỉ người dùng đã đăng nhập mới truy cập được
+        public async Task<IActionResult> GetUserInfo()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound("Không tìm thấy người dùng");
+
+            return Ok(new
+            {
+                fullName = user.FullName,
+                dateOfBirth = user.DateOfBirth,
+                contact = user.Contact,
+                role = user.Role
+            });
         }
 
         private string GenerateJwtToken(User user)
