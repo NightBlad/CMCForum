@@ -54,7 +54,8 @@ namespace UniversityForumApi.Controllers
                         UserId = post.UserId,
                         Content = $"{liker.FullName} đã thích bài viết của bạn: \"{post.Title}\"",
                         IsRead = false,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        PostId = postId
                     };
                     _context.Notifications.Add(notification);
                     await _context.SaveChangesAsync();

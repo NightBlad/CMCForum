@@ -55,7 +55,8 @@ namespace UniversityForumApi.Controllers
                     UserId = post.UserId,
                     Content = $"{commenter.FullName} đã bình luận bài viết của bạn: \"{post.Title}\"",
                     IsRead = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    PostId = post.Id
                 };
                 _context.Notifications.Add(notification);
 
