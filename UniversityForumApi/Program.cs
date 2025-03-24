@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using UniversityForumApi.Data;
 using UniversityForumApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -74,10 +75,12 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-
 var app = builder.Build();
-
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ForumDbContext>();
+    DbSeeder.SeedAdmin(context);
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -87,7 +90,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 
-app.UseStaticFiles(); 
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
@@ -97,10 +100,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/", async context =>
-{
-    context.Response.Redirect("/Welcome.html");
-    await Task.CompletedTask;
-});
+// Serve the default HTML page
+app.MapFallbackToFile("Welcome.html");
 
 app.Run();

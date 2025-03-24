@@ -7,24 +7,72 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background: linear-gradient(to right, #4a90e2, #50a3a2);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            margin: 0;
         }
+
         .welcome-container {
             text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-in-out;
         }
-        .welcome-container h1 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-        }
-        .welcome-container .btn {
-            margin: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.2rem;
+
+            .welcome-container h1 {
+                font-size: 3rem;
+                margin-bottom: 2rem;
+                font-weight: bold;
+            }
+
+            .welcome-container .btn {
+                margin: 0.5rem;
+                padding: 0.75rem 1.5rem;
+                font-size: 1.2rem;
+                border: none;
+                border-radius: 5px;
+                transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            }
+
+            .welcome-container .btn-success {
+                background-color: #28a745;
+                color: #fff;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+                .welcome-container .btn-success:hover {
+                    background-color: #218838;
+                    transform: scale(1.05);
+                    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+                }
+
+            .welcome-container .btn-primary {
+                background-color: #007bff;
+                color: #fff;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+                .welcome-container .btn-primary:hover {
+                    background-color: #0069d9;
+                    transform: scale(1.05);
+                    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+                }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -36,3 +84,4 @@
     </div>
 </body>
 </html>
+
