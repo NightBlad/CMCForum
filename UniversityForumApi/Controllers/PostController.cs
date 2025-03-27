@@ -16,19 +16,53 @@ namespace UniversityForumApi.Controllers
         // Đăng bài viết (chỉ người đăng nhập mới dùng được)
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
+        public async Task<IActionResult> CreatePost([FromForm] string title, [FromForm] string content, [FromForm] IFormFile media)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             var post = new Post
             {
-                Title = dto.Title,
-                Content = dto.Content,
-                Type = dto.Type,
+                Title = title,
+                Content = content,
+                Type = "Text", // Giá trị mặc định, có thể bỏ trường Type nếu không cần
                 UserId = userId,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow
             };
+
+            // Xử lý file tải lên (nếu có)
+            if (media != null)
+            {
+                // Kiểm tra định dạng file
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".mp4", ".mov" };
+                var extension = Path.GetExtension(media.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest("Định dạng file không được hỗ trợ. Chỉ hỗ trợ hình ảnh (jpg, jpeg, png) và video (mp4, mov).");
+                }
+
+                // Kiểm tra kích thước file (giới hạn 10MB)
+                if (media.Length > 10 * 1024 * 1024)
+                {
+                    return BadRequest("Kích thước file không được vượt quá 10MB.");
+                }
+
+                // Tạo tên file duy nhất
+                var fileName = Guid.NewGuid().ToString() + extension;
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+
+                // Tạo thư mục nếu chưa tồn tại
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                // Lưu file vào thư mục
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await media.CopyToAsync(stream);
+                }
+
+                // Lưu URL của file vào model
+                post.MediaUrl = $"/uploads/{fileName}";
+            }
 
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
@@ -38,7 +72,7 @@ namespace UniversityForumApi.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdatePost(int id, [FromBody] UpdatePostDto dto)
+        public async Task<IActionResult> UpdatePost(int id, [FromForm] string title, [FromForm] string content, [FromForm] IFormFile media)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var post = await _context.Posts.FindAsync(id);
@@ -46,9 +80,53 @@ namespace UniversityForumApi.Controllers
             if (post == null || post.UserId != userId)
                 return Forbid("Bạn không có quyền chỉnh sửa bài viết này");
 
-            post.Title = dto.Title;
-            post.Content = dto.Content;
+            post.Title = title;
+            post.Content = content;
             post.UpdatedAt = DateTime.UtcNow;
+
+            // Xử lý file tải lên (nếu có)
+            if (media != null)
+            {
+                // Kiểm tra định dạng file
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".mp4", ".mov" };
+                var extension = Path.GetExtension(media.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest("Định dạng file không được hỗ trợ. Chỉ hỗ trợ hình ảnh (jpg, jpeg, png) và video (mp4, mov).");
+                }
+
+                // Kiểm tra kích thước file (giới hạn 10MB)
+                if (media.Length > 10 * 1024 * 1024)
+                {
+                    return BadRequest("Kích thước file không được vượt quá 10MB.");
+                }
+
+                // Xóa file cũ nếu có
+                if (!string.IsNullOrEmpty(post.MediaUrl))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", post.MediaUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                // Tạo tên file duy nhất
+                var fileName = Guid.NewGuid().ToString() + extension;
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+
+                // Tạo thư mục nếu chưa tồn tại
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                // Lưu file mới
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await media.CopyToAsync(stream);
+                }
+
+                // Cập nhật URL của file
+                post.MediaUrl = $"/uploads/{fileName}";
+            }
 
             await _context.SaveChangesAsync();
             return Ok("Bài viết đã được cập nhật");
@@ -63,6 +141,16 @@ namespace UniversityForumApi.Controllers
 
             if (post == null || post.UserId != userId)
                 return Forbid("Bạn không có quyền xóa bài viết này");
+
+            // Xóa file nếu có
+            if (!string.IsNullOrEmpty(post.MediaUrl))
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", post.MediaUrl.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
 
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
@@ -82,9 +170,9 @@ namespace UniversityForumApi.Controllers
                 .ThenInclude(c => c.User)
                 .Select(p => new
                 {
-                    p.Id,
-                    p.Title,
-                    p.Content,
+                    Id = p.Id,
+                    Title = p.Title,
+                    Content = p.Content,
                     Author = p.User.FullName,
                     p.CreatedAt,
                     LikeCount = p.Likes.Count,
@@ -96,7 +184,7 @@ namespace UniversityForumApi.Controllers
                         c.CreatedAt
                     }).ToList(),
                     UserLiked = p.Likes.Any(l => l.UserId == userId),
-                    IsAuthor = true // Luôn true vì đây là bài viết của người dùng hiện tại
+                    IsAuthor = true
                 })
                 .ToListAsync();
             return Ok(posts);
@@ -125,9 +213,9 @@ namespace UniversityForumApi.Controllers
             var posts = await query
                 .Select(p => new
                 {
-                    p.Id,
-                    p.Title,
-                    p.Content,
+                    Id = p.Id,
+                    Title = p.Title,
+                    Content = p.Content,
                     Author = p.User != null ? p.User.FullName : "Unknown",
                     p.CreatedAt,
                     LikeCount = p.Likes != null ? p.Likes.Count : 0,
@@ -160,9 +248,9 @@ namespace UniversityForumApi.Controllers
                 .Where(p => p.Id == id && p.Status == "Approved")
                 .Select(p => new
                 {
-                    p.Id,
-                    p.Title,
-                    p.Content,
+                    Id = p.Id,
+                    Title = p.Title,
+                    Content = p.Content,
                     Author = p.User != null ? p.User.FullName : "Unknown",
                     p.CreatedAt,
                     LikeCount = p.Likes != null ? p.Likes.Count : 0,
@@ -174,7 +262,7 @@ namespace UniversityForumApi.Controllers
                         c.CreatedAt
                     }).ToList(),
                     UserLiked = userId.HasValue && p.Likes.Any(l => l.UserId == userId),
-                    IsAuthor = userId.HasValue && p.UserId == userId // Thêm trường này
+                    IsAuthor = userId.HasValue && p.UserId == userId
                 })
                 .FirstOrDefaultAsync();
 
