@@ -371,7 +371,7 @@
             }
         }
 
-        // ========== HÀM HIỂN THỊ DANH SÁCH BÀI VIẾT (ĐÃ SỬA) ==========
+        
         function displayPosts(posts) {
             const container = document.getElementById('posts-container');
             container.innerHTML = '';
@@ -683,12 +683,14 @@
             });
 
             function editPost(postId) {
-                axios.get(`${ API_URL } /Post/${ postId } `, {
-                    headers: { 'Authorization': `Bearer ${ token } ` }
+                console.log('Hàm editPost được gọi với postId:', postId);
+                axios.get(`${API_URL}/Post/${postId}`, {  // Không có khoảng trắng thừa
+                    headers: { 'Authorization': `Bearer ${token}` }  // Loại bỏ khoảng trắng trong token
                 }).then(response => {
+                    console.log(response.data);
                     const post = response.data;
-                    document.getElementById('post-title').value = post.title;
-                    document.getElementById('post-content').value = post.content;
+                    document.getElementById('post-title').value = post.title;  // Gán tiêu đề bài viết
+                    document.getElementById('post-content').value = post.content;  // Gán nội dung bài viết
                     currentPostId = postId;
                     openPostPopup('edit');
                 }).catch(error => {
@@ -699,14 +701,15 @@
 
             function deletePost(postId) {
                 if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-                    axios.delete(`${ API_URL } /Post/${ postId } `, {
+                    axios.delete(`${ API_URL }/Post/${ postId } `, {
                         headers: { 'Authorization': `Bearer ${ token } ` }
                     }).then(() => {
                         alert('Bài viết đã được xóa');
                         loadPosts();
                     }).catch(error => {
+                        console.error('Lỗi khi xóa:', error.response); // Xem chi tiết lỗi
                         alert('Không thể xóa bài viết');
-                        console.error(error);
+                        
                     });
                 }
             }

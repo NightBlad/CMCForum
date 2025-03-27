@@ -12,37 +12,80 @@
             display: flex;
         }
 
+        /* Sửa lỗi CSS sidebar */
         .sidebar {
+            position: fixed; /* Thanh sidebar cố định */
+            top: 0;
+            left: 0;
             width: 60px;
-            background-color: #2c3e50;
-            height: 100vh;
+            height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+            background-color: #fafafa;
             text-align: center;
             padding-top: 20px;
+            overflow-y: auto; /* Thêm thanh cuộn nếu nội dung dài */
         }
 
             .sidebar img {
                 width: 40px;
                 margin: 20px 0;
                 cursor: pointer;
+                transition: transform 0.2s;
             }
+
+                .sidebar img:hover {
+                    transform: scale(1.1);
+                }
 
         .content {
             flex-grow: 1;
             padding: 20px;
             background-color: #f8f9fa;
+            margin-left: 60px; /* Đảm bảo nội dung không bị che bởi sidebar */
         }
 
-        .post {
-            background-color: white;
-            padding: 15px;
+        .header-section {
+            display: flex;
+            align-items: center;
+            gap: 20px; /* Khoảng cách giữa "Trang chủ" và thanh tìm kiếm */
             margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #search-input {
+            width: 200px; /* Chiều rộng cố định cho thanh tìm kiếm */
+            padding: 6px 12px;
+            border: 1px solid #ced4da;
+        }
+
+        #search-button {
+            padding: 6px 10px;
+        }
+
+        h2 {
+            margin: 0; /* Loại bỏ khoảng cách mặc định của h2 */
+        }
+
+        /* ========== BẮT ĐẦU PHẦN CHỈNH SỬA GIAO DIỆN POST ========== */
+
+        /* Thay thế style cũ của .post */
+        .post {
+            border: 1px solid #ddd; /* Viền mỏng */
+            border-radius: 8px; /* Bo góc nhẹ */
+            margin-bottom: 20px; /* Khoảng cách giữa các bài */
+            padding: 15px; /* Khoảng cách nội dung bên trong */
+            background-color: #fff; /* Nền trắng */
+        }
+
+        /* Header bài viết: ảnh đại diện, tác giả, thời gian */
         .post-header {
             display: flex;
             align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
         }
 
@@ -50,22 +93,204 @@
                 width: 40px;
                 height: 40px;
                 border-radius: 50%;
-                margin-right: 10px;
+                object-fit: cover;
             }
 
-        .post-actions button {
-            margin-right: 10px;
+            .post-header .author {
+                font-weight: 600;
+            }
+
+            .post-header .time {
+                font-size: 14px;
+                color: #999;
+            }
+
+        /* Nội dung bài viết */
+        .post-content {
+            margin-top: 5px;
+            font-size: 15px;
+            line-height: 1.5;
         }
+
+        /* Khu vực nút like, bình luận */
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+            .post-actions button {
+                border: none;
+                background: none;
+                cursor: pointer;
+                color: #555;
+                font-size: 14px;
+                padding: 0;
+                transition: color 0.2s;
+            }
+
+                .post-actions button:hover {
+                    color: #000;
+                }
+
+        /* Nút đã like */
+        .liked {
+            color: #007bff !important;
+            font-weight: 600;
+        }
+
+        /* Form comment & danh sách comment */
+        .comment-form {
+            display: none; /* Ẩn mặc định, sẽ bật/tắt bằng JS */
+        }
+
+        .comment-list {
+            display: none; /* Ẩn mặc định, sẽ bật/tắt bằng JS */
+            margin-top: 10px;
+        }
+
+        .comment-item {
+            background-color: #f1f1f1;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        /* ========== KẾT THÚC PHẦN CHỈNH SỬA GIAO DIỆN POST ========== */
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 40%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+            .popup textarea {
+                width: 100%;
+                height: 100px;
+                margin-bottom: 10px;
+            }
+
+        .notification-popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 10%;
+            width: 300px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+            .notification-item:last-child {
+                border-bottom: none;
+            }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        /* CSS cho menu người dùng */
+        .user-menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+        }
+
+        .user-avatar img {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1002;
+            width: 150px;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #333;
+        }
+
+            .menu-item:hover {
+                background-color: #f1f1f1;
+            }
+
+        /* CSS cho nút cài đặt và menu bài viết */
+        .post-settings {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .post-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+            .post-menu button {
+                display: block;
+                width: 100%;
+                text-align: left;
+            }
     </style>
 </head>
 <body>
+    <div class="user-menu">
+        <div class="user-avatar" onclick="toggleMenu()">
+            <img src="/HinhAnh/avatar.jpg" alt="Avatar" class="rounded-circle">
+        </div>
+        <div class="menu-dropdown" id="menu-dropdown">
+            <a href="profile.html" class="menu-item">Trang cá nhân</a>
+            <a href="userinfo.html" class="menu-item">Thông tin cá nhân</a>
+            <a href="#" class="menu-item" onclick="logout()">Đăng xuất</a>
+        </div>
+    </div>
+
     <div class="sidebar">
-        <img src="https://via.placeholder.com/40" alt="Logo CMC">
-        <img src="https://via.placeholder.com/40" alt="Trang chủ" onclick="window.location.href='admin-homepage.html'">
-        <img src="https://via.placeholder.com/40" alt="Lượt thích">
-        <img src="https://via.placeholder.com/40" alt="Bình luận">
-        <img src="https://via.placeholder.com/40" alt="Đăng bài">
-        <img src="https://via.placeholder.com/40" alt="Duyệt bài viết">
+        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="window.location.href='admin-homepage.html'">
+        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='admin-homepage.html'">
+        <img src="/HinhAnh/like.png" alt="Lượt thích" onclick="showNotifications('likes')">
+        <img src="/HinhAnh/comment.png" alt="Bình luận" onclick="showNotifications('comments')">
+        <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="openPostPopup('create')">
+        <img src="/HinhAnh/website.png" alt="Duyệt bài viết" onclick="window.location.href='review.html'">
     </div>
     <div class="content">
         <h2>Duyệt bài viết</h2>
@@ -91,20 +316,20 @@
                     const postElement = document.createElement('div');
                     postElement.className = 'post';
                     postElement.innerHTML = `
-                        <div class="post-header">
-                            <img src="https://via.placeholder.com/40" alt="Avatar">
-                            <div>
-                                <strong>${post.author}</strong>
-                                <small>${new Date(post.createdAt).toLocaleString()}</small>
+                            <div class="post-header">
+                                <img src="https://via.placeholder.com/40" alt="Avatar">
+                                <div>
+                                    <strong>${post.author}</strong>
+                                    <small>${new Date(post.createdAt).toLocaleString()}</small>
+                                </div>
                             </div>
-                        </div>
-                        <h5>${post.title}</h5>
-                        <p>${post.content}</p>
-                        <div class="post-actions">
-                            <button class="btn btn-sm btn-success" onclick="approvePost(${post.id})">Duyệt</button>
-                            <button class="btn btn-sm btn-danger" onclick="rejectPost(${post.id})">Từ chối</button>
-                        </div>
-                    `;
+                            <h5>${post.title}</h5>
+                            <p>${post.content}</p>
+                            <div class="post-actions">
+                                <button class="btn btn-sm btn-success" onclick="approvePost(${post.id})">Duyệt</button>
+                                <button class="btn btn-sm btn-danger" onclick="rejectPost(${post.id})">Từ chối</button>
+                            </div>
+                        `;
                     container.appendChild(postElement);
                 });
             } catch (error) {
