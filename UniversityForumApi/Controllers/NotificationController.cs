@@ -8,14 +8,9 @@ namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class NotificationController : ControllerBase
+    public class NotificationController(ForumDbContext context) : ControllerBase
     {
-        private readonly ForumDbContext _context;
-
-        public NotificationController(ForumDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ForumDbContext _context = context;
 
         [HttpGet]
         [Authorize]

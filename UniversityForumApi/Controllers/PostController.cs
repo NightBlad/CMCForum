@@ -9,14 +9,9 @@ namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PostController : ControllerBase
+    public class PostController(ForumDbContext context) : ControllerBase
     {
-        private readonly ForumDbContext _context;
-
-        public PostController(ForumDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ForumDbContext _context = context;
 
         // Đăng bài viết (chỉ người đăng nhập mới dùng được)
         [HttpPost]
@@ -87,18 +82,18 @@ namespace UniversityForumApi.Controllers
                 .ThenInclude(c => c.User)
                 .Select(p => new
                 {
-                    Id = p.Id,
-                    Title = p.Title,
-                    Content = p.Content,
+                    p.Id,
+                    p.Title,
+                    p.Content,
                     Author = p.User.FullName,
-                    CreatedAt = p.CreatedAt,
+                    p.CreatedAt,
                     LikeCount = p.Likes.Count,
                     Comments = p.Comments.Select(c => new
                     {
-                        Id = c.Id,
-                        Content = c.Content,
+                        c.Id,
+                        c.Content,
                         Author = c.User.FullName,
-                        CreatedAt = c.CreatedAt
+                        c.CreatedAt
                     }).ToList(),
                     UserLiked = p.Likes.Any(l => l.UserId == userId),
                     IsAuthor = true // Luôn true vì đây là bài viết của người dùng hiện tại
@@ -124,26 +119,26 @@ namespace UniversityForumApi.Controllers
             if (!string.IsNullOrEmpty(keyword))
             {
                 var lowerKeyword = keyword.ToLower();
-                query = query.Where(p => p.Title.ToLower().Contains(lowerKeyword) || p.Content.ToLower().Contains(lowerKeyword));
+                query = query.Where(p => p.Title.Contains(lowerKeyword, StringComparison.CurrentCultureIgnoreCase) || p.Content.Contains(lowerKeyword, StringComparison.CurrentCultureIgnoreCase));
             }
 
             var posts = await query
                 .Select(p => new
                 {
-                    Id = p.Id,
-                    Title = p.Title,
-                    Content = p.Content,
+                    p.Id,
+                    p.Title,
+                    p.Content,
                     Author = p.User != null ? p.User.FullName : "Unknown",
-                    CreatedAt = p.CreatedAt,
+                    p.CreatedAt,
                     LikeCount = p.Likes != null ? p.Likes.Count : 0,
                     Comments = p.Comments.Select(c => new
                     {
-                        Id = c.Id,
-                        Content = c.Content,
+                        c.Id,
+                        c.Content,
                         Author = c.User != null ? c.User.FullName : "Unknown",
-                        CreatedAt = c.CreatedAt
+                        c.CreatedAt
                     }).ToList(),
-                    UserLiked = userId.HasValue && p.Likes.Any(l => l.UserId == userId),
+                    UserLiked = userId.HasValue && (p.Likes != null && p.Likes.Any(l => l.UserId == userId)),
                     IsAuthor = userId.HasValue && p.UserId == userId
                 })
                 .ToListAsync();
@@ -165,18 +160,18 @@ namespace UniversityForumApi.Controllers
                 .Where(p => p.Id == id && p.Status == "Approved")
                 .Select(p => new
                 {
-                    Id = p.Id,
-                    Title = p.Title,
-                    Content = p.Content,
+                    p.Id,
+                    p.Title,
+                    p.Content,
                     Author = p.User != null ? p.User.FullName : "Unknown",
-                    CreatedAt = p.CreatedAt,
+                    p.CreatedAt,
                     LikeCount = p.Likes != null ? p.Likes.Count : 0,
                     Comments = p.Comments.Select(c => new
                     {
-                        Id = c.Id,
-                        Content = c.Content,
+                        c.Id,
+                        c.Content,
                         Author = c.User != null ? c.User.FullName : "Unknown",
-                        CreatedAt = c.CreatedAt
+                        c.CreatedAt
                     }).ToList(),
                     UserLiked = userId.HasValue && p.Likes.Any(l => l.UserId == userId),
                     IsAuthor = userId.HasValue && p.UserId == userId // Thêm trường này

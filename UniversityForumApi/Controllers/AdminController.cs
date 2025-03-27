@@ -8,14 +8,9 @@ namespace UniversityForumApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")] // Chỉ admin mới truy cập được
-    public class AdminController : ControllerBase
+    public class AdminController(ForumDbContext context) : ControllerBase
     {
-        private readonly ForumDbContext _context;
-
-        public AdminController(ForumDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ForumDbContext _context = context;
 
         // Xem danh sách bài viết chờ kiểm duyệt
         [HttpGet("posts/pending")]

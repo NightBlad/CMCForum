@@ -9,14 +9,9 @@ namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CommentController : ControllerBase
+    public class CommentController(ForumDbContext context) : ControllerBase
     {
-        private readonly ForumDbContext _context;
-
-        public CommentController(ForumDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ForumDbContext _context = context;
 
         // Thêm bình luận (chỉ người đăng nhập mới dùng được)
         [HttpPost]

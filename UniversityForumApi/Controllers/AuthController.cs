@@ -13,16 +13,10 @@ namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController(ForumDbContext context, IConfiguration configuration) : ControllerBase
     {
-        private readonly ForumDbContext _context;
-        private readonly IConfiguration _configuration;
-
-        public AuthController(ForumDbContext context, IConfiguration configuration)
-        {
-            _context = context;
-            _configuration = configuration;
-        }
+        private readonly ForumDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -55,14 +49,20 @@ namespace UniversityForumApi.Controllers
                 return Unauthorized("Invalid username or password");
 
             var token = GenerateJwtToken(user);
-            return Ok(new { Token = token, Role = user.Role });
+            return Ok(new { Token = token, user.Role });
         }
 
         [HttpGet("info")]
         [Authorize] // Chỉ người dùng đã đăng nhập mới truy cập được
         public async Task<IActionResult> GetUserInfo()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("Invalid token");
+
+            if (!int.TryParse(userIdClaim, out var userId))
+                return Unauthorized("Invalid token");
+
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return NotFound("Không tìm thấy người dùng");
@@ -85,7 +85,13 @@ namespace UniversityForumApi.Controllers
                 new Claim(ClaimTypes.Role, user.Role)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var jwtKey = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new InvalidOperationException("JWT key is not configured.");
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? string.Empty));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(

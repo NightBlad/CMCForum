@@ -8,14 +8,9 @@ namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class LikeController : ControllerBase
+    public class LikeController(ForumDbContext context) : ControllerBase
     {
-        private readonly ForumDbContext _context;
-
-        public LikeController(ForumDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ForumDbContext _context = context;
 
         // Thích hoặc bỏ thích bài viết
         [HttpPost("post/{postId}")]
