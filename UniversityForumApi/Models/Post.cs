@@ -11,7 +11,8 @@
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public List<Comment> Comments { get; set; } = new List<Comment>(); // Đã thêm từ bước trước
-        public List<Like> Likes { get; set; } = new List<Like>(); // Thêm để lưu danh sách Likes
+        public List<Comment> Comments { get; set; } = new List<Comment>();
+        public List<Like> Likes { get; set; } = new List<Like>();
+        public string MediaUrl { get; set; } // Thêm trường này để lưu URL của file
     }
 }
