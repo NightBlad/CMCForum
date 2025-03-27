@@ -9,9 +9,14 @@ namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PostController(ForumDbContext context) : ControllerBase
+    public class PostController : ControllerBase
     {
-        private readonly ForumDbContext _context = context;
+        private readonly ForumDbContext _context;
+
+        public PostController(ForumDbContext context)
+        {
+            _context = context;
+        }
 
         // Đăng bài viết (chỉ người đăng nhập mới dùng được)
         [HttpPost]
@@ -173,15 +178,16 @@ namespace UniversityForumApi.Controllers
                     Id = p.Id,
                     Title = p.Title,
                     Content = p.Content,
+                    MediaUrl = p.MediaUrl, // Thêm trường này
                     Author = p.User.FullName,
-                    p.CreatedAt,
+                    CreatedAt = p.CreatedAt,
                     LikeCount = p.Likes.Count,
                     Comments = p.Comments.Select(c => new
                     {
-                        c.Id,
-                        c.Content,
+                        Id = c.Id,
+                        Content = c.Content,
                         Author = c.User.FullName,
-                        c.CreatedAt
+                        CreatedAt = c.CreatedAt
                     }).ToList(),
                     UserLiked = p.Likes.Any(l => l.UserId == userId),
                     IsAuthor = true
@@ -207,7 +213,7 @@ namespace UniversityForumApi.Controllers
             if (!string.IsNullOrEmpty(keyword))
             {
                 var lowerKeyword = keyword.ToLower();
-                query = query.Where(p => p.Title.Contains(lowerKeyword, StringComparison.CurrentCultureIgnoreCase) || p.Content.Contains(lowerKeyword, StringComparison.CurrentCultureIgnoreCase));
+                query = query.Where(p => p.Title.ToLower().Contains(lowerKeyword) || p.Content.ToLower().Contains(lowerKeyword));
             }
 
             var posts = await query
@@ -216,17 +222,18 @@ namespace UniversityForumApi.Controllers
                     Id = p.Id,
                     Title = p.Title,
                     Content = p.Content,
+                    MediaUrl = p.MediaUrl, // Thêm trường này
                     Author = p.User != null ? p.User.FullName : "Unknown",
-                    p.CreatedAt,
+                    CreatedAt = p.CreatedAt,
                     LikeCount = p.Likes != null ? p.Likes.Count : 0,
                     Comments = p.Comments.Select(c => new
                     {
-                        c.Id,
-                        c.Content,
+                        Id = c.Id,
+                        Content = c.Content,
                         Author = c.User != null ? c.User.FullName : "Unknown",
-                        c.CreatedAt
+                        CreatedAt = c.CreatedAt
                     }).ToList(),
-                    UserLiked = userId.HasValue && (p.Likes != null && p.Likes.Any(l => l.UserId == userId)),
+                    UserLiked = userId.HasValue && p.Likes.Any(l => l.UserId == userId),
                     IsAuthor = userId.HasValue && p.UserId == userId
                 })
                 .ToListAsync();
@@ -251,15 +258,16 @@ namespace UniversityForumApi.Controllers
                     Id = p.Id,
                     Title = p.Title,
                     Content = p.Content,
+                    MediaUrl = p.MediaUrl, // Thêm trường này
                     Author = p.User != null ? p.User.FullName : "Unknown",
-                    p.CreatedAt,
+                    CreatedAt = p.CreatedAt,
                     LikeCount = p.Likes != null ? p.Likes.Count : 0,
                     Comments = p.Comments.Select(c => new
                     {
-                        c.Id,
-                        c.Content,
+                        Id = c.Id,
+                        Content = c.Content,
                         Author = c.User != null ? c.User.FullName : "Unknown",
-                        c.CreatedAt
+                        CreatedAt = c.CreatedAt
                     }).ToList(),
                     UserLiked = userId.HasValue && p.Likes.Any(l => l.UserId == userId),
                     IsAuthor = userId.HasValue && p.UserId == userId

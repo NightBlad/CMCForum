@@ -322,8 +322,8 @@
     </div>
 
     <div class="sidebar">
-        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="window.location.href='homepage.html'">
-        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='homepage.html'">
+        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="redirectToHomepage()">
+        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="redirectToHomepage()">
         <img src="/HinhAnh/like.png" alt="Lượt thích" onclick="showNotifications('likes')">
         <img src="/HinhAnh/comment.png" alt="Bình luận" onclick="showNotifications('comments')">
         <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="openPostPopup('create')">
@@ -384,9 +384,22 @@
         const API_URL = 'https://localhost:7196/api';
         const token = localStorage.getItem('token');
         let currentPostId = null;
-
+        let userRole = '';
         if (!token) {
             window.location.href = 'login.html';
+        }
+        // Tải thông tin cá nhân từ API
+        async function loadUserInfo() {
+            try {
+                const response1 = await axios.get(`${API_URL}/Auth/info`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const user = response1.data;
+                userRole = user.role;
+            } catch (error) {
+                console.error('Lỗi khi tải thông tin cá nhân:', error);
+                document.getElementById('user-info').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
+            }
         }
 
         // Tải danh sách bài viết của người dùng hiện tại (profile)
@@ -788,9 +801,17 @@
             popup.style.display = 'none';
             overlay.style.display = 'none';
         }
-
+        // Hàm chuyển hướng dựa trên vai trò người dùng
+        function redirectToHomepage() {
+            if (userRole === 'Admin') {
+                window.location.href = 'admin-homepage.html';
+            } else {
+                window.location.href = 'homepage.html';
+            }
+        }
         // Tải bài viết khi vào trang profile
         loadPosts('newest');
+        loadUserInfo();
     </script>
 </body>
 </html>

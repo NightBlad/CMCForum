@@ -186,8 +186,8 @@
     </div>
     <!-- Sidebar -->
     <div class="sidebar">
-        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="window.location.href='homepage.html'">
-        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='homepage.html'">
+        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="redirectToHomepage()">
+        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="redirectToHomepage()">
         <img src="/HinhAnh/like.png" alt="Lượt thích" onclick="showNotifications('likes')">
         <img src="/HinhAnh/comment.png" alt="Bình luận" onclick="showNotifications('comments')">
         <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="openPostPopup('create')">
@@ -228,6 +228,7 @@
     <script>
         const API_URL = 'https://localhost:7196/api';
         const token = localStorage.getItem('token');
+        let userRole = '';
 
         if (!token) {
             window.location.href = 'login.html';
@@ -240,14 +241,15 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const user = response.data;
+                userRole = user.role;
                 const userInfoContainer = document.getElementById('user-info');
                 userInfoContainer.innerHTML = `
-              <h3>Thông tin của bạn</h3>
-              <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p> 
-              <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
-              <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
-              <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
-            `;
+                        <h3>Thông tin của bạn</h3>
+                        <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p>
+                        <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
+                        <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
+                        <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
+                    `;
             } catch (error) {
                 console.error('Lỗi khi tải thông tin cá nhân:', error);
                 document.getElementById('user-info').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
@@ -292,9 +294,9 @@
                         item.className = 'notification-item';
                         item.style.cursor = 'pointer';
                         item.innerHTML = `
-                  <p>${notification.content}</p>
-                  <small>${new Date(notification.createdAt).toLocaleString()}</small>
-                `;
+                                <p>${notification.content}</p>
+                                <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                            `;
                         if (notification.postId) {
                             item.addEventListener('click', () => {
                                 window.location.href = `post-detail.html?id=${notification.postId}`;
@@ -313,6 +315,15 @@
         function closeNotificationPopup() {
             document.getElementById('notification-popup').style.display = 'none';
             document.getElementById('notification-overlay').style.display = 'none';
+        }
+
+        // Hàm chuyển hướng dựa trên vai trò người dùng
+        function redirectToHomepage() {
+            if (userRole === 'Admin') {
+                window.location.href = 'admin-homepage.html';
+            } else {
+                window.location.href = 'homepage.html';
+            }
         }
 
         // Tải thông tin cá nhân khi trang được mở

@@ -325,6 +325,7 @@
                             </div>
                             <h5>${post.title}</h5>
                             <p>${post.content}</p>
+                            ${post.mediaUrl ? getMediaHtml(post.mediaUrl) : ''}
                             <div class="post-actions">
                                 <button class="btn btn-sm btn-success" onclick="approvePost(${post.id})">Duyệt</button>
                                 <button class="btn btn-sm btn-danger" onclick="rejectPost(${post.id})">Từ chối</button>
@@ -336,6 +337,16 @@
                 console.error('Error loading pending posts:', error);
                 alert('Không thể tải danh sách bài viết chờ duyệt');
             }
+        }
+
+        // Generate HTML for media
+        function getMediaHtml(mediaUrl) {
+            if (mediaUrl.endsWith('.jpg') || mediaUrl.endsWith('.jpeg') || mediaUrl.endsWith('.png')) {
+                return `<img src="${mediaUrl}" alt="Media" class="img-fluid">`;
+            } else if (mediaUrl.endsWith('.mp4') || mediaUrl.endsWith('.mov')) {
+                return `<video src="${mediaUrl}" controls class="img-fluid"></video>`;
+            }
+            return '';
         }
 
         // Duyệt bài viết

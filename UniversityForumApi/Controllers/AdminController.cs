@@ -26,6 +26,7 @@ namespace UniversityForumApi.Controllers
                     p.Content,
                     p.Type,
                     p.CreatedAt,
+                    p.MediaUrl,
                     Author = p.User.FullName
                 })
                 .ToListAsync();
