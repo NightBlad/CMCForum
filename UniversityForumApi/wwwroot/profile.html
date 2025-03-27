@@ -214,7 +214,7 @@
             .menu-item:hover {
                 background-color: #f1f1f1;
             }
-        /* Menu bài viết (nếu cần) */
+        /* Menu bài viết */
         .post-settings {
             position: relative;
             margin-left: auto;
@@ -244,6 +244,68 @@
                 .post-menu button:hover {
                     background-color: #f8f9fa;
                 }
+
+        /* CSS cho khu vực hiển thị ảnh và video trong bài viết */
+        .media-container {
+            max-width: 500px; /* Chiều rộng tối đa */
+            max-height: 400px; /* Chiều cao tối đa */
+            margin-top: 10px;
+            overflow: hidden; /* Ẩn phần thừa nếu có */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .media-container img,
+            .media-container video {
+                width: 100%;
+                height: 100%;
+                object-fit: contain; /* Đảm bảo hiển thị đầy đủ, không bị cắt */
+                border-radius: 4px;
+                cursor: pointer; /* Con trỏ tay cho ảnh (có thể nhấn) */
+            }
+
+        /* CSS cho popup phóng to ảnh */
+        .image-zoom-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1001;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+        }
+
+            .image-zoom-popup img {
+                max-width: 100%;
+                max-height: 80vh; /* Giới hạn chiều cao để không vượt quá màn hình */
+                object-fit: contain;
+            }
+
+            .image-zoom-popup .close-btn {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 24px;
+                font-weight: bold;
+                cursor: pointer;
+                color: #333;
+            }
+
+        /* CSS cho preview file trong form đăng bài */
+        #media-preview img,
+        #media-preview video {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -258,7 +320,7 @@
             <a href="#" class="menu-item" onclick="logout()">Đăng xuất</a>
         </div>
     </div>
-    
+
     <div class="sidebar">
         <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="window.location.href='homepage.html'">
         <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='homepage.html'">
@@ -293,6 +355,11 @@
                 <label for="post-content" class="form-label">Nội dung</label>
                 <textarea class="form-control" id="post-content" required></textarea>
             </div>
+            <div class="mb-3">
+                <label for="media-upload" class="form-label">Tải lên hình ảnh hoặc video (tùy chọn)</label>
+                <input type="file" class="form-control" id="media-upload" accept="image/*,video/*">
+                <div id="media-preview" class="mt-2"></div>
+            </div>
             <button type="submit" class="btn btn-primary">Đăng bài</button>
             <button type="button" class="btn btn-secondary" onclick="closePostPopup()">Hủy</button>
         </form>
@@ -305,10 +372,18 @@
         <button class="btn btn-secondary mt-2 w-100" onclick="closeNotificationPopup()">Đóng</button>
     </div>
 
+    <!-- Popup phóng to ảnh -->
+    <div class="overlay" id="image-zoom-overlay"></div>
+    <div class="image-zoom-popup" id="image-zoom-popup">
+        <span class="close-btn" onclick="closeImageZoomPopup()">X</span>
+        <img id="zoomed-image" src="" alt="Zoomed Image">
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const API_URL = 'https://localhost:7196/api';
         const token = localStorage.getItem('token');
+        let currentPostId = null;
 
         if (!token) {
             window.location.href = 'login.html';
@@ -331,61 +406,89 @@
                     posts.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
                 }
 
-                const container = document.getElementById('posts-container');
-                container.innerHTML = '';
-
-                if (!posts || posts.length === 0) {
-                    container.innerHTML = '<p>Bạn chưa đăng bài viết nào.</p>';
-                    return;
-                }
-
-                posts.forEach(post => {
-                    const comments = Array.isArray(post.comments) ? post.comments : [];
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post';
-
-                    postElement.innerHTML = `
-                <div class="post-header">
-                  <img src="https://via.placeholder.com/40" alt="Avatar">
-                  <div>
-                    <div class="author">${post.author || 'Unknown'}</div>
-                    <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
-                  </div>
-                </div>
-                <div class="post-content">
-                  <h6>${post.title || ''}</h6>
-                  <p>${post.content || ''}</p>
-                </div>
-                <div class="post-actions">
-                  <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
-                    ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
-                  </button>
-                  <button onclick="openCommentBox(${post.id}, ${comments.length})">
-                    Bình luận (${comments.length})
-                  </button>
-                </div>
-                <!-- Form nhập bình luận (ẩn mặc định) -->
-                <div class="comment-form mt-3" id="comment-form-${post.id}">
-                  <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
-                  <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
-                </div>
-                <!-- Danh sách bình luận (ẩn mặc định) -->
-                <div class="comment-list mt-3" id="comments-container-${post.id}">
-                  ${comments.length > 0 ? comments.map(comment => `
-                    <div class="comment-item">
-                      <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
-                      <br>
-                      <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
-                    </div>
-                  `).join('') : '<p>Chưa có bình luận nào.</p>'}
-                </div>
-              `;
-                    container.appendChild(postElement);
-                });
+                displayPosts(posts);
             } catch (error) {
                 console.error('Error loading posts:', error);
                 document.getElementById('posts-container').innerHTML = '<p>Đã xảy ra lỗi khi tải bài viết.</p>';
             }
+        }
+
+        function displayPosts(posts) {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<p>Không có bài viết nào để hiển thị.</p>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const comments = Array.isArray(post.comments) ? post.comments : [];
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+
+                // Kiểm tra phần mở rộng của mediaUrl để xác định loại file
+                const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+
+                postElement.innerHTML = `
+                <div class="post-header">
+                    <img src="/HinhAnh/avatar.jpg" alt="Avatar">
+                    <div>
+                        <div class="author">${post.author || 'Unknown'}</div>
+                        <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
+                    </div>
+                    ${post.isAuthor ? `
+                    <div class="post-settings ms-auto">
+                        <button class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
+                        <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
+                            <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
+                            <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                        </div>
+                    </div>` : ''}
+                </div>
+
+                <div class="post-content">
+                    <h6>${post.title || ''}</h6>
+                    <p>${post.content || ''}</p>
+                    ${post.mediaUrl ? `
+                        <div class="media-container">
+                            ${isVideo ?
+                            `<video src="${post.mediaUrl}" controls></video>` :
+                            `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
+                        </div>` : ''}
+                </div>
+
+                <div class="post-actions">
+                    <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
+                        ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
+                    </button>
+                    <button onclick="openCommentBox(${post.id}, ${comments.length})">
+                        Bình luận (${comments.length})
+                    </button>
+                </div>
+
+                <!-- Form nhập comment (ẩn mặc định) -->
+                <div class="comment-form mt-3" id="comment-form-${post.id}">
+                    <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
+                    <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
+                </div>
+
+                <!-- Danh sách comment (ẩn mặc định) -->
+                <div class="comment-list mt-3" id="comments-container-${post.id}">
+                    ${comments.length > 0
+                        ? comments.map(comment => `
+                            <div class="comment-item">
+                                <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
+                                <br>
+                                <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
+                            </div>
+                        `).join('')
+                        : '<p>Chưa có bình luận nào.</p>'
+                    }
+                </div>
+            `;
+                container.appendChild(postElement);
+            });
         }
 
         function filterPosts(filterType) {
@@ -457,7 +560,7 @@
         // Hàm mở/tắt form và danh sách comment
         function openCommentBox(postId, totalComments) {
             const form = document.getElementById(`comment-form-${postId}`);
-            const list = document.getElementById(`comments-container-${post.id}`);
+            const list = document.getElementById(`comments-container-${postId}`);
             form.style.display = (form.style.display === 'none' || !form.style.display) ? 'block' : 'none';
             list.style.display = (list.style.display === 'none' || !list.style.display) ? 'block' : 'none';
         }
@@ -468,26 +571,88 @@
             e.preventDefault();
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
+            const mediaFile = document.getElementById('media-upload').files[0];
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            if (mediaFile) {
+                formData.append('media', mediaFile);
+            }
+
             try {
-                await axios.post(`${API_URL}/Post`, { title, content, type: "Text" }, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                if (currentPostId) {
+                    await axios.put(`${API_URL}/Post/${currentPostId}`, formData, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                    alert('Bài viết đã được cập nhật');
+                } else {
+                    await axios.post(`${API_URL}/Post`, formData, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                    alert('Bài viết đã được đăng');
+                }
                 closePostPopup();
                 loadPosts();
+                currentPostId = null;
             } catch (error) {
-                console.error('Error posting:', error);
-                alert('Không thể đăng bài');
+                console.error('Error:', error);
+                alert(error.response?.data || 'Không thể xử lý bài viết');
             }
         });
 
-        function openPostPopup() {
-            document.getElementById('post-popup').style.display = 'block';
+        // Preview ảnh/video khi chọn file
+        document.getElementById('media-upload').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const mediaPreview = document.getElementById('media-preview');
+            mediaPreview.innerHTML = '';
+
+            if (file) {
+                const fileType = file.type;
+                const url = URL.createObjectURL(file);
+
+                if (fileType.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    mediaPreview.appendChild(img);
+                } else if (fileType.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = url;
+                    video.controls = true;
+                    mediaPreview.appendChild(video);
+                }
+            }
+        });
+
+        function openPostPopup(mode) {
+            const popup = document.getElementById('post-popup');
+            const titleElement = popup.querySelector('h3');
+            if (mode === 'create') {
+                titleElement.textContent = 'Đăng bài mới';
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-content').value = '';
+                document.getElementById('media-upload').value = '';
+                document.getElementById('media-preview').innerHTML = '';
+                currentPostId = null;
+            } else if (mode === 'edit') {
+                titleElement.textContent = 'Sửa bài viết';
+            }
+            popup.style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
         }
 
         function closePostPopup() {
             document.getElementById('post-popup').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
+            document.getElementById('media-preview').innerHTML = '';
+            document.getElementById('media-upload').value = '';
+            currentPostId = null;
         }
 
         async function showNotifications(type) {
@@ -513,9 +678,9 @@
                         item.className = 'notification-item';
                         item.style.cursor = 'pointer';
                         item.innerHTML = `
-                  <p>${notification.content}</p>
-                  <small>${new Date(notification.createdAt).toLocaleString()}</small>
-                `;
+                                <p>${notification.content}</p>
+                                <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                            `;
                         if (notification.postId) {
                             item.addEventListener('click', () => {
                                 window.location.href = `post-detail.html?id=${notification.postId}`;
@@ -546,6 +711,82 @@
         function logout() {
             localStorage.removeItem('token');
             window.location.href = 'login.html';
+        }
+
+        function togglePostMenu(postId) {
+            const menu = document.getElementById(`post-menu-${postId}`);
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', (event) => {
+            const menus = document.querySelectorAll('.post-menu');
+            menus.forEach(menu => {
+                if (!menu.contains(event.target) && !event.target.classList.contains('btn-link')) {
+                    menu.style.display = 'none';
+                }
+            });
+        });
+
+        function editPost(postId) {
+            console.log('Hàm editPost được gọi với postId:', postId);
+            axios.get(`${API_URL}/Post/${postId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(response => {
+                console.log(response.data);
+                const post = response.data;
+                document.getElementById('post-title').value = post.title;
+                document.getElementById('post-content').value = post.content;
+                currentPostId = postId;
+
+                const mediaPreview = document.getElementById('media-preview');
+                mediaPreview.innerHTML = '';
+                if (post.mediaUrl) {
+                    const isVideo = ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+                    if (isVideo) {
+                        mediaPreview.innerHTML = `<video src="${post.mediaUrl}" controls></video>`;
+                    } else {
+                        mediaPreview.innerHTML = `<img src="${post.mediaUrl}" alt="Media Preview">`;
+                    }
+                }
+
+                openPostPopup('edit');
+            }).catch(error => {
+                console.error('Lỗi khi lấy dữ liệu bài viết:', error);
+                alert('Không thể tải dữ liệu bài viết');
+            });
+        }
+
+        function deletePost(postId) {
+            if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                axios.delete(`${API_URL}/Post/${postId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(() => {
+                    alert('Bài viết đã được xóa');
+                    loadPosts();
+                }).catch(error => {
+                    console.error('Lỗi khi xóa:', error.response);
+                    alert('Không thể xóa bài viết');
+                });
+            }
+        }
+
+        // Hàm mở popup phóng to ảnh
+        function openImageZoomPopup(imageUrl) {
+            const popup = document.getElementById('image-zoom-popup');
+            const overlay = document.getElementById('image-zoom-overlay');
+            const zoomedImage = document.getElementById('zoomed-image');
+
+            zoomedImage.src = imageUrl;
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        // Hàm đóng popup phóng to ảnh
+        function closeImageZoomPopup() {
+            const popup = document.getElementById('image-zoom-popup');
+            const overlay = document.getElementById('image-zoom-overlay');
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
         }
 
         // Tải bài viết khi vào trang profile

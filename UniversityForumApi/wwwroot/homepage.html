@@ -270,6 +270,68 @@
                 width: 100%;
                 text-align: left;
             }
+
+        /* CSS cho preview file */
+        #media-preview img,
+        #media-preview video {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        /* CSS cho khu vực hiển thị ảnh và video trong bài viết */
+        .media-container {
+            max-width: 500px; /* Chiều rộng tối đa */
+            max-height: 400px; /* Chiều cao tối đa */
+            margin-top: 10px;
+            overflow: hidden; /* Ẩn phần thừa nếu có */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .media-container img,
+            .media-container video {
+                width: 100%;
+                height: 100%;
+                object-fit: contain; /* Đảm bảo hiển thị đầy đủ, không bị cắt */
+                border-radius: 4px;
+                cursor: pointer; /* Con trỏ tay cho ảnh (có thể nhấn) */
+            }
+
+        /* CSS cho popup phóng to ảnh */
+        .image-zoom-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1001;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+        }
+
+            .image-zoom-popup img {
+                max-width: 100%;
+                max-height: 80vh; /* Giới hạn chiều cao để không vượt quá màn hình */
+                object-fit: contain;
+            }
+
+            .image-zoom-popup .close-btn {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 24px;
+                font-weight: bold;
+                cursor: pointer;
+                color: #333;
+            }
     </style>
 </head>
 <body>
@@ -325,6 +387,11 @@
                 <label for="post-content" class="form-label">Nội dung</label>
                 <textarea class="form-control" id="post-content" required></textarea>
             </div>
+            <div class="mb-3">
+                <label for="media-upload" class="form-label">Tải lên hình ảnh hoặc video (tùy chọn)</label>
+                <input type="file" class="form-control" id="media-upload" accept="image/*,video/*">
+                <div id="media-preview" class="mt-2"></div>
+            </div>
             <button type="submit" class="btn btn-primary">Đăng bài</button>
             <button type="button" class="btn btn-secondary" onclick="closePostPopup()">Hủy</button>
         </form>
@@ -335,6 +402,13 @@
         <h4>Thông báo</h4>
         <div id="notification-list"></div>
         <button class="btn btn-secondary mt-2 w-100" onclick="closeNotificationPopup()">Đóng</button>
+    </div>
+
+    <!-- Popup phóng to ảnh -->
+    <div class="overlay" id="image-zoom-overlay"></div>
+    <div class="image-zoom-popup" id="image-zoom-popup">
+        <span class="close-btn" onclick="closeImageZoomPopup()">X</span>
+        <img id="zoomed-image" src="" alt="Zoomed Image">
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -371,7 +445,6 @@
             }
         }
 
-        
         function displayPosts(posts) {
             const container = document.getElementById('posts-container');
             container.innerHTML = '';
@@ -385,6 +458,9 @@
                 const comments = Array.isArray(post.comments) ? post.comments : [];
                 const postElement = document.createElement('div');
                 postElement.className = 'post';
+
+                // Kiểm tra phần mở rộng của mediaUrl để xác định loại file
+                const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
 
                 postElement.innerHTML = `
                         <div class="post-header">
@@ -406,6 +482,12 @@
                         <div class="post-content">
                             <h6>${post.title || ''}</h6>
                             <p>${post.content || ''}</p>
+                            ${post.mediaUrl ? `
+                                <div class="media-container">
+                                    ${isVideo ?
+                            `<video src="${post.mediaUrl}" controls></video>` :
+                            `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
+                                </div>` : ''}
                         </div>
 
                         <div class="post-actions">
@@ -562,20 +644,30 @@
             e.preventDefault();
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
+            const mediaFile = document.getElementById('media-upload').files[0];
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            if (mediaFile) {
+                formData.append('media', mediaFile);
+            }
 
             try {
                 if (currentPostId) {
-                    await axios.put(`${API_URL}/Post/${currentPostId}`, { title, content }, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                    await axios.put(`${API_URL}/Post/${currentPostId}`, formData, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data'
+                        }
                     });
                     alert('Bài viết đã được cập nhật');
                 } else {
-                    await axios.post(`${API_URL}/Post`, {
-                        title,
-                        content,
-                        type: "Text"
-                    }, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                    await axios.post(`${API_URL}/Post`, formData, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data'
+                        }
                     });
                     alert('Bài viết đã được đăng');
                 }
@@ -595,6 +687,8 @@
                 titleElement.textContent = 'Đăng bài mới';
                 document.getElementById('post-title').value = '';
                 document.getElementById('post-content').value = '';
+                document.getElementById('media-upload').value = '';
+                document.getElementById('media-preview').innerHTML = '';
                 currentPostId = null;
             } else if (mode === 'edit') {
                 titleElement.textContent = 'Sửa bài viết';
@@ -606,6 +700,8 @@
         function closePostPopup() {
             document.getElementById('post-popup').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
+            document.getElementById('media-preview').innerHTML = '';
+            document.getElementById('media-upload').value = '';
             currentPostId = null;
         }
 
@@ -639,83 +735,113 @@
                         if (notification.postId) {
                             item.addEventListener('click', () => {
                                 window.location.href = `post-detail.html?id=${notification.postId}`;
-                                });
-                            }
-                            notificationList.appendChild(item);
-                        });
-                    }
-
-                    document.getElementById('notification-popup').style.display = 'block';
-                    document.getElementById('notification-overlay').style.display = 'block';
-                } catch (error) {
-                    console.error('Lỗi khi tải thông báo:', error);
-                    alert('Không thể tải thông báo. Vui lòng thử lại sau.');
-                }
-            }
-
-            function closeNotificationPopup() {
-                document.getElementById('notification-popup').style.display = 'none';
-                document.getElementById('notification-overlay').style.display = 'none';
-            }
-
-            function toggleMenu() {
-                const menu = document.getElementById('menu-dropdown');
-                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-            }
-
-            function logout() {
-                localStorage.removeItem('token');
-                window.location.href = 'login.html';
-            }
-
-            function togglePostMenu(postId) {
-                const menu = document.getElementById(`post-menu-${postId}`);
-                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-            }
-
-            document.addEventListener('click', (event) => {
-                const menus = document.querySelectorAll('.post-menu');
-                menus.forEach(menu => {
-                    if (!menu.contains(event.target) && !event.target.classList.contains('btn-link')) {
-                        menu.style.display = 'none';
-                    }
-                });
-            });
-
-            function editPost(postId) {
-                console.log('Hàm editPost được gọi với postId:', postId);
-                axios.get(`${API_URL}/Post/${postId}`, {  // Không có khoảng trắng thừa
-                    headers: { 'Authorization': `Bearer ${token}` }  // Loại bỏ khoảng trắng trong token
-                }).then(response => {
-                    console.log(response.data);
-                    const post = response.data;
-                    document.getElementById('post-title').value = post.title;  // Gán tiêu đề bài viết
-                    document.getElementById('post-content').value = post.content;  // Gán nội dung bài viết
-                    currentPostId = postId;
-                    openPostPopup('edit');
-                }).catch(error => {
-                    console.error('Lỗi khi lấy dữ liệu bài viết:', error);
-                    alert('Không thể tải dữ liệu bài viết');
-                });
-            }
-
-            function deletePost(postId) {
-                if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-                    axios.delete(`${ API_URL }/Post/${ postId } `, {
-                        headers: { 'Authorization': `Bearer ${ token } ` }
-                    }).then(() => {
-                        alert('Bài viết đã được xóa');
-                        loadPosts();
-                    }).catch(error => {
-                        console.error('Lỗi khi xóa:', error.response); // Xem chi tiết lỗi
-                        alert('Không thể xóa bài viết');
-                        
+                            });
+                        }
+                        notificationList.appendChild(item);
                     });
                 }
-            }
 
-            // Gọi hàm loadPosts ban đầu
-            loadPosts('newest');
+                document.getElementById('notification-popup').style.display = 'block';
+                document.getElementById('notification-overlay').style.display = 'block';
+            } catch (error) {
+                console.error('Lỗi khi tải thông báo:', error);
+                alert('Không thể tải thông báo. Vui lòng thử lại sau.');
+            }
+        }
+
+        function closeNotificationPopup() {
+            document.getElementById('notification-popup').style.display = 'none';
+            document.getElementById('notification-overlay').style.display = 'none';
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('menu-dropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        function togglePostMenu(postId) {
+            const menu = document.getElementById(`post-menu-${postId}`);
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', (event) => {
+            const menus = document.querySelectorAll('.post-menu');
+            menus.forEach(menu => {
+                if (!menu.contains(event.target) && !event.target.classList.contains('btn-link')) {
+                    menu.style.display = 'none';
+                }
+            });
+        });
+
+        function editPost(postId) {
+            console.log('Hàm editPost được gọi với postId:', postId);
+            axios.get(`${API_URL}/Post/${postId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(response => {
+                console.log(response.data);
+                const post = response.data;
+                document.getElementById('post-title').value = post.title;
+                document.getElementById('post-content').value = post.content;
+                currentPostId = postId;
+
+                const mediaPreview = document.getElementById('media-preview');
+                mediaPreview.innerHTML = '';
+                if (post.mediaUrl) {
+                    const isVideo = ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+                    if (isVideo) {
+                        mediaPreview.innerHTML = `<video src="${post.mediaUrl}" controls></video>`;
+                    } else {
+                        mediaPreview.innerHTML = `<img src="${post.mediaUrl}" alt="Media Preview">`;
+                    }
+                }
+
+                openPostPopup('edit');
+            }).catch(error => {
+                console.error('Lỗi khi lấy dữ liệu bài viết:', error);
+                alert('Không thể tải dữ liệu bài viết');
+            });
+        }
+
+        function deletePost(postId) {
+            if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                axios.delete(`${API_URL}/Post/${postId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(() => {
+                    alert('Bài viết đã được xóa');
+                    loadPosts();
+                }).catch(error => {
+                    console.error('Lỗi khi xóa:', error.response);
+                    alert('Không thể xóa bài viết');
+                });
+            }
+        }
+
+        // Hàm mở popup phóng to ảnh
+        function openImageZoomPopup(imageUrl) {
+            const popup = document.getElementById('image-zoom-popup');
+            const overlay = document.getElementById('image-zoom-overlay');
+            const zoomedImage = document.getElementById('zoomed-image');
+
+            zoomedImage.src = imageUrl;
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        // Hàm đóng popup phóng to ảnh
+        function closeImageZoomPopup() {
+            const popup = document.getElementById('image-zoom-popup');
+            const overlay = document.getElementById('image-zoom-overlay');
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // Gọi hàm loadPosts ban đầu
+        loadPosts('newest');
     </script>
 </body>
 </html>
