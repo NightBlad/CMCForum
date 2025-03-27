@@ -578,7 +578,7 @@
                     }, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    alert('Bài viết đã được đăng');
+                    alert('Bài viết đã được gửi cho Admin');
                 }
                 closePostPopup();
                 loadPosts();
@@ -684,12 +684,14 @@
         });
 
         function editPost(postId) {
-            axios.get(`${API_URL} /Post/${postId} `, {
-                headers: { 'Authorization': `Bearer ${token} ` }
+            console.log('Hàm editPost được gọi với postId:', postId);
+            axios.get(`${API_URL}/Post/${postId}`, {  // Không có khoảng trắng thừa
+                headers: { 'Authorization': `Bearer ${token}` }  // Loại bỏ khoảng trắng trong token
             }).then(response => {
+                console.log(response.data);
                 const post = response.data;
-                document.getElementById('post-title').value = post.title;
-                document.getElementById('post-content').value = post.content;
+                document.getElementById('post-title').value = post.title;  // Gán tiêu đề bài viết
+                document.getElementById('post-content').value = post.content;  // Gán nội dung bài viết
                 currentPostId = postId;
                 openPostPopup('edit');
             }).catch(error => {
@@ -700,8 +702,8 @@
 
         function deletePost(postId) {
             if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-                axios.delete(`${API_URL} /Post/${postId} `, {
-                    headers: { 'Authorization': `Bearer ${token} ` }
+                axios.delete(`${API_URL}/Post/${postId} `, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }).then(() => {
                     alert('Bài viết đã được xóa');
                     loadPosts();
