@@ -289,7 +289,7 @@
         <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='admin-homepage.html'">
         <img src="/HinhAnh/like.png" alt="Lượt thích" onclick="showNotifications('likes')">
         <img src="/HinhAnh/comment.png" alt="Bình luận" onclick="showNotifications('comments')">
-        <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="openPostPopup('create')">
+        <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="window.location.href='admin-homepage.html'">
         <img src="/HinhAnh/website.png" alt="Duyệt bài viết" onclick="window.location.href='review.html'">
     </div>
     <div class="content">
@@ -317,7 +317,7 @@
                     postElement.className = 'post';
                     postElement.innerHTML = `
                             <div class="post-header">
-                                <img src="https://via.placeholder.com/40" alt="Avatar">
+                                <img src="${post.avatarUrl || '/HinhAnh/avatar.jpg'}" alt="Avatar">
                                 <div>
                                     <strong>${post.author}</strong>
                                     <small>${new Date(post.createdAt).toLocaleString()}</small>
@@ -337,6 +337,11 @@
                 console.error('Error loading pending posts:', error);
                 alert('Không thể tải danh sách bài viết chờ duyệt');
             }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('menu-dropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
 
         // Generate HTML for media

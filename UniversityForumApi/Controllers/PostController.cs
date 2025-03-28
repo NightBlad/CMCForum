@@ -21,7 +21,7 @@ namespace UniversityForumApi.Controllers
         // Đăng bài viết (chỉ người đăng nhập mới dùng được)
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreatePost([FromForm] string title, [FromForm] string content, [FromForm] IFormFile media)
+        public async Task<IActionResult> CreatePost([FromForm] string title, [FromForm] string content, [FromForm] IFormFile? media)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
@@ -67,6 +67,7 @@ namespace UniversityForumApi.Controllers
 
                 // Lưu URL của file vào model
                 post.MediaUrl = $"/uploads/{fileName}";
+                post.Type = extension == ".mp4" || extension == ".mov" ? "Video" : "Image";
             }
 
             _context.Posts.Add(post);
@@ -77,7 +78,7 @@ namespace UniversityForumApi.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdatePost(int id, [FromForm] string title, [FromForm] string content, [FromForm] IFormFile media)
+        public async Task<IActionResult> UpdatePost(int id, [FromForm] string title, [FromForm] string content, [FromForm] IFormFile? media)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var post = await _context.Posts.FindAsync(id);
@@ -131,6 +132,7 @@ namespace UniversityForumApi.Controllers
 
                 // Cập nhật URL của file
                 post.MediaUrl = $"/uploads/{fileName}";
+                post.Type = extension == ".mp4" || extension == ".mov" ? "Video" : "Image";
             }
 
             await _context.SaveChangesAsync();
