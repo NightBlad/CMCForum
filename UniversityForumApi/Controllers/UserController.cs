@@ -72,5 +72,63 @@ namespace UniversityForumApi.Controllers
                 return StatusCode(500, new { message = "Đã xảy ra lỗi khi cập nhật thông tin cá nhân" });
             }
         }
+        [HttpPut("UpdateLogin")]
+        public async Task<IActionResult> UpdateLogin(UpdateUserLoginDto loginDto)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Verify current password using BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.CurrentPassword, user.PasswordHash))
+            {
+                return BadRequest(new { message = "Mật khẩu hiện tại không đúng" });
+            }
+
+            // Check if the new username already exists (if username is being changed)
+            if (loginDto.Username != user.Username)
+            {
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
+
+                if (existingUser != null)
+                {
+                    return BadRequest(new { message = "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác" });
+                }
+            }
+
+            // Update username
+            user.Username = loginDto.Username;
+
+            // Update password if provided
+            if (!string.IsNullOrEmpty(loginDto.NewPassword))
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(loginDto.NewPassword);
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Thông tin đăng nhập đã được cập nhật thành công" });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi khi cập nhật thông tin đăng nhập" });
+            }
+        }
+
+        [HttpGet("CheckUsername")]
+        public async Task<ActionResult<bool>> CheckUsername(string username)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username && u.Id != userId);
+
+            return existingUser != null;
+        }
     }
 }

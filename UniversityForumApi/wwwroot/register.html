@@ -100,10 +100,16 @@
             <div class="mb-3">
                 <label for="username" class="form-label">Tên đăng nhập</label>
                 <input type="text" class="form-control" id="username" required>
+                <small id="usernameHelp" class="form-text text-muted"></small>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Mật khẩu</label>
                 <input type="password" class="form-control" id="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Nhập lại mật khẩu</label>
+                <input type="password" class="form-control" id="confirmPassword" required>
+                <small id="passwordHelp" class="form-text text-muted"></small>
             </div>
             <button type="submit" class="btn btn-success w-100">Xác nhận đăng ký</button>
         </form>
@@ -115,6 +121,8 @@
         const API_URL = 'https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/api';
         const form = document.getElementById('register-form');
         const message = document.getElementById('register-message');
+        const usernameHelp = document.getElementById('usernameHelp');
+        const passwordHelp = document.getElementById('passwordHelp');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -123,8 +131,26 @@
             const contact = document.getElementById('contact').value;
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                passwordHelp.textContent = 'Mật khẩu không khớp.';
+                passwordHelp.style.color = 'red';
+                return;
+            } else {
+                passwordHelp.textContent = '';
+            }
 
             try {
+                const usernameExists = await checkUsernameExists(username);
+                if (usernameExists) {
+                    usernameHelp.textContent = 'Tên đăng nhập đã tồn tại.';
+                    usernameHelp.style.color = 'red';
+                    return;
+                } else {
+                    usernameHelp.textContent = '';
+                }
+
                 await axios.post(`${API_URL}/Auth/register`, {
                     fullName,
                     dateOfBirth,
@@ -139,6 +165,18 @@
                 message.style.color = 'red';
             }
         });
+
+        async function checkUsernameExists(username) {
+            try {
+                const response = await axios.get(`${API_URL}/Auth/check-username`, {
+                    params: { username }
+                });
+                return response.data.exists;
+            } catch (error) {
+                console.error('Error checking username:', error);
+                return false;
+            }
+        }
     </script>
 </body>
 </html>

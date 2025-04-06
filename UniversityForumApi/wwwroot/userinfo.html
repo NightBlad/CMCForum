@@ -221,6 +221,39 @@
             </div>
             <button id="edit-button" class="btn btn-outline-primary mt-3" onclick="toggleEdit()">Chỉnh sửa thông tin</button>
         </div>
+        <div class="user-info mt-4">
+            <h3>Thông tin đăng nhập</h3>
+            <div id="login-info-display">
+                <p>
+                    <strong>Tên đăng nhập:</strong>
+                    <span id="username-display"></span>
+                </p>
+                <p>
+                    <strong>Mật khẩu:</strong>
+                    <span>••••••••</span>
+                </p>
+            </div>
+            <div id="login-edit" style="display:none;">
+                <form id="login-edit-form">
+                    <div class="mb-3">
+                        <label for="edit-username" class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" id="edit-username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-current-password" class="form-label">Mật khẩu hiện tại</label>
+                        <input type="password" class="form-control" id="edit-current-password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-new-password" class="form-label">Mật khẩu mới</label>
+                        <input type="password" class="form-control" id="edit-new-password">
+                        <small class="text-muted">Để trống nếu không muốn thay đổi mật khẩu</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelLoginEdit()">Hủy</button>
+                </form>
+            </div>
+            <button id="login-edit-button" class="btn btn-outline-primary mt-3" onclick="toggleLoginEdit()">Chỉnh sửa thông tin đăng nhập</button>
+        </div>
     </div>
     <!-- Popup và Overlay -->
     <div class="overlay" id="overlay"></div>
@@ -256,7 +289,7 @@
             window.location.href = 'login.html';
         }
 
-        // Tải thông tin cá nhân từ API
+        // Update the loadUserInfo function to include username display
         async function loadUserInfo() {
             try {
                 const response = await axios.get(`${API_URL}/User/Profile`, {
@@ -265,18 +298,143 @@
                 const user = response.data;
                 currentUserData = user;
                 userRole = user.role;
+
+                // Update existing user info display
                 const userInfoContainer = document.getElementById('info-display');
                 userInfoContainer.innerHTML = `
-                    <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p>
-                    <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
-                    <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
-                    <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
-                `;
+                            <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p>
+                            <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
+                            <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
+                            <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
+                        `;
+
+                // Update username display
+                document.getElementById('username-display').textContent = user.username || 'Chưa có thông tin';
+
             } catch (error) {
                 console.error('Lỗi khi tải thông tin cá nhân:', error);
                 document.getElementById('info-display').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
             }
         }
+        // Check if username exists
+        async function checkUsernameExists(username) {
+            try {
+                const response = await axios.get(`${API_URL}/User/CheckUsername`, {
+                    params: { username },
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra tên đăng nhập:', error);
+                return false;
+            }
+        }
+
+        function toggleLoginEdit() {
+            const loginEditContainer = document.getElementById('login-edit');
+            const loginEditButton = document.getElementById('login-edit-button');
+            const loginDisplayContainer = document.getElementById('login-info-display');
+
+            if (loginEditContainer.style.display === 'none') {
+                // Switch to edit mode
+                loginEditContainer.style.display = 'block';
+                loginDisplayContainer.style.display = 'none';
+                loginEditButton.style.display = 'none';
+
+                // Populate form with current data
+                document.getElementById('edit-username').value = currentUserData.username || '';
+                document.getElementById('edit-current-password').value = '';
+                document.getElementById('edit-new-password').value = '';
+            }
+        }
+
+        function cancelLoginEdit() {
+            document.getElementById('login-info-display').style.display = 'block';
+            document.getElementById('login-edit').style.display = 'none';
+            document.getElementById('login-edit-button').style.display = 'block';
+        }
+
+        // Add username validation on blur
+        document.getElementById('edit-username').addEventListener('blur', async function () {
+            const username = this.value;
+
+            // Skip validation if username hasn't changed
+            if (username === currentUserData.username) {
+                return;
+            }
+
+            if (username.length > 0) {
+                const exists = await checkUsernameExists(username);
+
+                if (exists) {
+                    // Show error message
+                    if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('text-danger')) {
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'text-danger';
+                        errorMessage.textContent = 'Tên đăng nhập này đã tồn tại, vui lòng chọn tên khác';
+                        this.insertAdjacentElement('afterend', errorMessage);
+                    }
+                } else {
+                    // Remove error message if exists
+                    if (this.nextElementSibling && this.nextElementSibling.classList.contains('text-danger')) {
+                        this.nextElementSibling.remove();
+                    }
+                }
+            }
+        });
+
+        // Register the login edit form submit event
+        document.getElementById('login-edit-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById('edit-username').value;
+            const currentPassword = document.getElementById('edit-current-password').value;
+            const newPassword = document.getElementById('edit-new-password').value;
+
+            // Check if there's an error message visible
+            const hasError = document.getElementById('edit-username').nextElementSibling &&
+                document.getElementById('edit-username').nextElementSibling.classList.contains('text-danger');
+
+            if (hasError) {
+                alert('Vui lòng sửa lỗi trước khi gửi form');
+                return;
+            }
+
+            // If username has changed, verify it's available
+            if (username !== currentUserData.username) {
+                const exists = await checkUsernameExists(username);
+                if (exists) {
+                    alert('Tên đăng nhập đã tồn tại, vui lòng chọn tên khác');
+                    return;
+                }
+            }
+
+            const updatedLoginData = {
+                username: username,
+                currentPassword: currentPassword,
+                newPassword: newPassword
+            };
+
+            try {
+                const response = await axios.put(`${API_URL}/User/UpdateLogin`, updatedLoginData, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                // Update successful
+                alert('Cập nhật thông tin đăng nhập thành công!');
+                cancelLoginEdit();
+                loadUserInfo(); // Reload the user info
+            } catch (error) {
+                console.error('Lỗi khi cập nhật thông tin đăng nhập:', error);
+
+                // Show specific error message if available
+                if (error.response && error.response.data && error.response.data.message) {
+                    alert(error.response.data.message);
+                } else {
+                    alert('Không thể cập nhật thông tin đăng nhập. Vui lòng thử lại sau.');
+                }
+            }
+        });
         function toggleEdit() {
             const displayContainer = document.getElementById('info-display');
             const editContainer = document.getElementById('info-edit');
@@ -383,9 +541,9 @@
                         }
 
                         item.innerHTML = `
-                    <p class="${statusClass}">${content}</p>
-                    <small>${new Date(notification.createdAt).toLocaleString()}</small>
-                `;
+                                    <p class="${statusClass}">${content}</p>
+                                    <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                                `;
 
                         // Add click event to navigate to the post if postId exists
                         if (notification.postId) {

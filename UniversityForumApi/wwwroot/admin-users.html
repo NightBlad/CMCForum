@@ -249,6 +249,13 @@
                 <input type="password" class="form-control" id="password">
                 <small id="passwordHelp" class="form-text text-muted">Để trống nếu không muốn thay đổi mật khẩu (chỉ khi cập nhật)</small>
             </div>
+            <!-- Add this div after the password field in the form -->
+            <div class="mb-3" id="confirmPasswordContainer">
+                <label for="confirmPassword" class="form-label">Nhập lại mật khẩu</label>
+                <input type="password" class="form-control" id="confirmPassword">
+                <small id="confirmPasswordHelp" class="form-text text-danger"></small>
+            </div>
+
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" onclick="closeUserForm()">Hủy</button>
                 <button type="submit" class="btn btn-primary">Lưu</button>
@@ -310,35 +317,35 @@
 
             if (!users || users.length === 0) {
                 tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="text-center">Không có người dùng nào để hiển thị</td>
-                        </tr>
-                    `;
+                            <tr>
+                                <td colspan="7" class="text-center">Không có người dùng nào để hiển thị</td>
+                            </tr>
+                        `;
                 return;
             }
 
             users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                        <td>${user.id}</td>
-                        <td>${user.fullName}</td>
-                        <td>${user.username}</td>
-                        <td>${new Date(user.dateOfBirth).toLocaleDateString()}</td>
-                        <td>${user.contact}</td>
-                        <td>
-                            <span class="role-badge ${user.role === 'Admin' ? 'role-admin' : 'role-student'}">
-                                ${user.role === 'Admin' ? 'Quản trị viên' : 'Sinh viên'}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
-                                Sửa
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteUser(${user.id})">
-                                Xóa
-                            </button>
-                        </td>
-                    `;
+                            <td>${user.id}</td>
+                            <td>${user.fullName}</td>
+                            <td>${user.username}</td>
+                            <td>${new Date(user.dateOfBirth).toLocaleDateString()}</td>
+                            <td>${user.contact}</td>
+                            <td>
+                                <span class="role-badge ${user.role === 'Admin' ? 'role-admin' : 'role-student'}">
+                                    ${user.role === 'Admin' ? 'Quản trị viên' : 'Sinh viên'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                    Sửa
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteUser(${user.id})">
+                                    Xóa
+                                </button>
+                            </td>
+                        `;
                 tableBody.appendChild(row);
             });
         }
@@ -355,24 +362,29 @@
             }
         });
 
-        // Mở form thêm/sửa người dùng
+        // Update the openUserForm function to show/hide confirm password field
         function openUserForm(mode, userId = null) {
             const popup = document.getElementById('user-popup');
             const titleElement = document.getElementById('user-form-title');
             const passwordField = document.getElementById('password');
             const passwordHelp = document.getElementById('passwordHelp');
+            const confirmPasswordContainer = document.getElementById('confirmPasswordContainer');
+            const confirmPasswordHelp = document.getElementById('confirmPasswordHelp');
 
             document.getElementById('user-form').reset();
+            confirmPasswordHelp.textContent = '';
             currentUserId = userId;
 
             if (mode === 'create') {
                 titleElement.textContent = 'Thêm người dùng mới';
                 passwordField.required = true;
                 passwordHelp.style.display = 'none';
+                confirmPasswordContainer.style.display = 'block'; // Show confirm password for new users
             } else if (mode === 'edit') {
                 titleElement.textContent = 'Cập nhật thông tin người dùng';
                 passwordField.required = false;
                 passwordHelp.style.display = 'block';
+                confirmPasswordContainer.style.display = 'none'; // Hide for edit mode
                 loadUserDetails(userId);
             }
 
@@ -428,9 +440,20 @@
             }
         }
 
-        // Lưu người dùng (thêm mới hoặc cập nhật)
+        // Update the submit event listener to validate passwords
         document.getElementById('user-form').addEventListener('submit', async function (e) {
             e.preventDefault();
+
+            const password = document.getElementById('password').value;
+
+            // For new users, validate password confirmation
+            if (!currentUserId) {
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                if (password !== confirmPassword) {
+                    document.getElementById('confirmPasswordHelp').textContent = 'Mật khẩu không khớp';
+                    return;
+                }
+            }
 
             const userData = {
                 fullName: document.getElementById('fullName').value,
@@ -438,7 +461,7 @@
                 dateOfBirth: document.getElementById('dateOfBirth').value,
                 contact: document.getElementById('contact').value,
                 role: document.getElementById('role').value,
-                password: document.getElementById('password').value
+                password: password
             };
 
             try {
