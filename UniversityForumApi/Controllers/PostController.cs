@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using UniversityForumApi.DTOs;
 using UniversityForumApi.Models;
+using TimeZoneConverter;
 
 namespace UniversityForumApi.Controllers
 {
@@ -12,6 +12,7 @@ namespace UniversityForumApi.Controllers
     public class PostController : ControllerBase
     {
         private readonly ForumDbContext _context;
+        private readonly TimeZoneInfo _vietnamTimeZone = TZConvert.GetTimeZoneInfo("Asia/Ho_Chi_Minh");
 
         public PostController(ForumDbContext context)
         {
@@ -32,7 +33,7 @@ namespace UniversityForumApi.Controllers
                 Type = "Text", // Giá trị mặc định, có thể bỏ trường Type nếu không cần
                 UserId = userId,
                 Status = "Pending",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
             };
 
             // Xử lý file tải lên (nếu có)
@@ -88,7 +89,7 @@ namespace UniversityForumApi.Controllers
 
             post.Title = title;
             post.Content = content;
-            post.UpdatedAt = DateTime.UtcNow;
+            post.UpdatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone);
 
             // Xử lý file tải lên (nếu có)
             if (media != null)

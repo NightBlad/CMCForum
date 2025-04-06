@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using UniversityForumApi.Models;
+using TimeZoneConverter;
 
 namespace UniversityForumApi.Controllers
 {
@@ -11,6 +12,7 @@ namespace UniversityForumApi.Controllers
     public class LikeController(ForumDbContext context) : ControllerBase
     {
         private readonly ForumDbContext _context = context;
+        private readonly TimeZoneInfo _vietnamTimeZone = TZConvert.GetTimeZoneInfo("Asia/Ho_Chi_Minh");
 
         // Thích hoặc bỏ thích bài viết
         [HttpPost("post/{postId}")]
@@ -37,7 +39,7 @@ namespace UniversityForumApi.Controllers
                     {
                         UserId = userId,
                         PostId = postId,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
                     };
 
                     _context.Likes.Add(like);
@@ -49,7 +51,7 @@ namespace UniversityForumApi.Controllers
                         UserId = post.UserId,
                         Content = $"{liker.FullName} đã thích bài viết của bạn: \"{post.Title}\"",
                         IsRead = false,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
                         PostId = postId
                     };
                     _context.Notifications.Add(notification);

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using UniversityForumApi.DTOs;
 using UniversityForumApi.Models;
-
+using TimeZoneConverter;
 namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
@@ -12,6 +12,7 @@ namespace UniversityForumApi.Controllers
     public class CommentController(ForumDbContext context) : ControllerBase
     {
         private readonly ForumDbContext _context = context;
+        private readonly TimeZoneInfo _vietnamTimeZone = TZConvert.GetTimeZoneInfo("Asia/Ho_Chi_Minh");
 
         // Thêm bình luận (chỉ người đăng nhập mới dùng được)
         [HttpPost]
@@ -39,7 +40,7 @@ namespace UniversityForumApi.Controllers
                     Content = dto.Content,
                     PostId = dto.PostId,
                     UserId = userId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
                 };
 
                 _context.Comments.Add(comment);
@@ -50,7 +51,7 @@ namespace UniversityForumApi.Controllers
                     UserId = post.UserId,
                     Content = $"{commenter.FullName} đã bình luận bài viết của bạn: \"{post.Title}\"",
                     IsRead = false,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
                     PostId = post.Id
                 };
                 _context.Notifications.Add(notification);

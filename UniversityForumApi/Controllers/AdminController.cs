@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniversityForumApi.Models;
 using UniversityForumApi.DTOs;
+using TimeZoneConverter;
 namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
@@ -11,6 +12,7 @@ namespace UniversityForumApi.Controllers
     public class AdminController(ForumDbContext context) : ControllerBase
     {
         private readonly ForumDbContext _context = context;
+        private readonly TimeZoneInfo _vietnamTimeZone = TZConvert.GetTimeZoneInfo("Asia/Ho_Chi_Minh");
 
         // Xem danh sách bài viết chờ kiểm duyệt
         [HttpGet("posts/pending")]
@@ -50,7 +52,7 @@ namespace UniversityForumApi.Controllers
                 UserId = post.UserId,
                 Content = "Bài viết của bạn đã được duyệt",
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
                 PostId = post.Id // Include PostId in the notification
             };
             _context.Notifications.Add(notification);
@@ -76,7 +78,7 @@ namespace UniversityForumApi.Controllers
                 UserId = post.UserId,
                 Content = "Bài viết của bạn đã bị từ chối",
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vietnamTimeZone),
                 PostId = post.Id // Include PostId in the notification
             };
             _context.Notifications.Add(notification);
