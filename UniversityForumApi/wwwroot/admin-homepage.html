@@ -436,6 +436,20 @@
             window.location.href = 'login.html';
         }
 
+        // Tải thông tin cá nhân từ API
+        async function loadUserInfo() {
+            try {
+                const response1 = await axios.get(`${API_URL}/Auth/info`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const user = response1.data;
+                userRole = user.role;
+            } catch (error) {
+                console.error('Lỗi khi tải thông tin cá nhân:', error);
+                document.getElementById('user-info').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
+            }
+        }
+
         // Tải danh sách bài viết
         async function loadPosts(filterType = 'newest') {
             try {
@@ -490,6 +504,10 @@
                                 <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
                                     ${post.isAuthor ? `<button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>` : ''}
                                     <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                                    ${post.isAuthor || userRole === 'Admin' ? `
+                                    <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                        ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                    </button>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -509,10 +527,6 @@
                             <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
                                 ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
                             </button>
-                            ${post.isAuthor || userRole === 'Admin' ? `
-                            <button onclick="toggleHidePost(${post.id}, ${post.isHidden})">
-                                ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
-                            </button>` : ''}
                             <button onclick="openCommentBox(${post.id}, ${comments.length})">
                                 Bình luận (${comments.length})
                             </button>
@@ -905,6 +919,7 @@
         }
 
         // Gọi hàm loadPosts ban đầu
+        loadUserInfo();
         loadPosts('newest');
     </script>
 </body>

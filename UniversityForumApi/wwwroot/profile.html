@@ -343,592 +343,608 @@
         <div class="mb-3">
             <button class="btn btn-secondary" onclick="loadHiddenPosts()">Xem bài viết ẩn</button>
         </div>
-        <div id="hidden-posts-container" class="mt-4"></div>
-        <div id="posts-container"></div>
-    </div>
+        <div class="mb-3">
+            <button class="btn btn-secondary" onclick="loadPosts('newest')">Tải lại bài viết</button>
+        </div>
+        <div id="user-info" class="mb-3"></div>
+        <div id="user-role" class="mb-3"></div>
+        <div id="user-posts" class="mb-3">
+            <h3>Danh sách bài viết</h3>
+            <p id="user-posts-message">Đang tải bài viết...</p>
+            <div id="user-posts-list"></div>
+        </div>
+        <div id="posts-section">
+            <h3>Danh sách bài viết</h3>
+            <p id="posts-message">Đang tải bài viết...</p>
+            <div id="posts-list"></div>
+            <h3>Danh sách bài viết ẩn</h3>
+            <div id="hidden-posts-container" class="mt-4"></div>
+            <h3>Danh sách bài viết của bạn</h3>
+            <div id="posts-container"></div>
+        </div>
 
-    <!-- Popup và Overlay -->
-    <div class="overlay" id="overlay"></div>
-    <div class="popup" id="post-popup">
-        <h3>Đăng bài mới</h3>
-        <form id="post-form">
-            <div class="mb-3">
-                <label for="post-title" class="form-label">Tiêu đề</label>
-                <input type="text" class="form-control" id="post-title" required>
-            </div>
-            <div class="mb-3">
-                <label for="post-content" class="form-label">Nội dung</label>
-                <textarea class="form-control" id="post-content" required></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="media-upload" class="form-label">Tải lên hình ảnh hoặc video (tùy chọn)</label>
-                <input type="file" class="form-control" id="media-upload" accept="image/*,video/*">
-                <div id="media-preview" class="mt-2"></div>
-            </div>
-            <button type="submit" class="btn btn-primary">Đăng bài</button>
-            <button type="button" class="btn btn-secondary" onclick="closePostPopup()">Hủy</button>
-        </form>
-    </div>
+        <!-- Popup và Overlay -->
+        <div class="overlay" id="overlay"></div>
+        <div class="popup" id="post-popup">
+            <h3>Đăng bài mới</h3>
+            <form id="post-form">
+                <div class="mb-3">
+                    <label for="post-title" class="form-label">Tiêu đề</label>
+                    <input type="text" class="form-control" id="post-title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="post-content" class="form-label">Nội dung</label>
+                    <textarea class="form-control" id="post-content" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="media-upload" class="form-label">Tải lên hình ảnh hoặc video (tùy chọn)</label>
+                    <input type="file" class="form-control" id="media-upload" accept="image/*,video/*">
+                    <div id="media-preview" class="mt-2"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng bài</button>
+                <button type="button" class="btn btn-secondary" onclick="closePostPopup()">Hủy</button>
+            </form>
+        </div>
 
-    <div class="overlay" id="notification-overlay"></div>
-    <div class="notification-popup" id="notification-popup">
-        <h4>Thông báo</h4>
-        <div id="notification-list"></div>
-        <button class="btn btn-secondary mt-2 w-100" onclick="closeNotificationPopup()">Đóng</button>
-    </div>
+        <div class="overlay" id="notification-overlay"></div>
+        <div class="notification-popup" id="notification-popup">
+            <h4>Thông báo</h4>
+            <div id="notification-list"></div>
+            <button class="btn btn-secondary mt-2 w-100" onclick="closeNotificationPopup()">Đóng</button>
+        </div>
 
-    <!-- Popup phóng to ảnh -->
-    <div class="overlay" id="image-zoom-overlay"></div>
-    <div class="image-zoom-popup" id="image-zoom-popup">
-        <span class="close-btn" onclick="closeImageZoomPopup()">X</span>
-        <img id="zoomed-image" src="" alt="Zoomed Image">
-    </div>
+        <!-- Popup phóng to ảnh -->
+        <div class="overlay" id="image-zoom-overlay"></div>
+        <div class="image-zoom-popup" id="image-zoom-popup">
+            <span class="close-btn" onclick="closeImageZoomPopup()">X</span>
+            <img id="zoomed-image" src="" alt="Zoomed Image">
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script>
-        const API_URL = 'https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/api';
-        const token = localStorage.getItem('token');
-        let currentPostId = null;
-        let userRole = '';
-        if (!token) {
-            window.location.href = 'login.html';
-        }
-        // Tải thông tin cá nhân từ API
-        async function loadUserInfo() {
-            try {
-                const response1 = await axios.get(`${API_URL}/Auth/info`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const user = response1.data;
-                userRole = user.role;
-            } catch (error) {
-                console.error('Lỗi khi tải thông tin cá nhân:', error);
-                document.getElementById('user-info').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script>
+            const API_URL = 'https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/api';
+            const token = localStorage.getItem('token');
+            let currentPostId = null;
+            let userRole = '';
+            if (!token) {
+                window.location.href = 'login.html';
             }
-        }
+            // Tải thông tin cá nhân từ API
+            async function loadUserInfo() {
+                try {
+                    const response1 = await axios.get(`${API_URL}/Auth/info`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const user = response1.data;
+                    userRole = user.role;
+                } catch (error) {
+                    console.error('Lỗi khi tải thông tin cá nhân:', error);
+                    document.getElementById('user-info').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
+                }
+            }
 
-        // Tải danh sách bài viết của người dùng hiện tại (profile)
-        async function loadPosts(filterType = 'newest') {
-            try {
-                const response = await axios.get(`${API_URL}/Post/user`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+            // Tải danh sách bài viết của người dùng hiện tại (profile) - không bao gồm bài viết ẩn
+            async function loadPosts(filterType = 'newest') {
+                try {
+                    const response = await axios.get(`${API_URL}/Post/user`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    let posts = response.data;
+
+                    // Lọc bỏ các bài viết ẩn
+                    posts = posts.filter(post => !post.isHidden);
+
+                    // Sắp xếp theo bộ lọc
+                    if (filterType === 'newest') {
+                        posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    } else if (filterType === 'oldest') {
+                        posts.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    } else if (filterType === 'most-liked') {
+                        posts.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+                    }
+
+                    displayPosts(posts);
+                } catch (error) {
+                    console.error('Error loading posts:', error);
+                    document.getElementById('posts-container').innerHTML = '<p>Đã xảy ra lỗi khi tải bài viết.</p>';
+                }
+            }
+            // Function to load hidden posts
+            async function loadHiddenPosts() {
+                try {
+                    const response = await axios.get(`${API_URL}/Post/user/hidden`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const hiddenPosts = response.data;
+                    displayHiddenPosts(hiddenPosts);
+                } catch (error) {
+                    console.error('Error loading hidden posts:', error);
+                    alert('Không thể tải bài viết ẩn');
+                }
+            }
+
+            // Function to display hidden posts
+            function displayHiddenPosts(posts) {
+                const hiddenPostsContainer = document.getElementById('hidden-posts-container');
+                hiddenPostsContainer.innerHTML = '';
+
+                if (!posts || posts.length === 0) {
+                    hiddenPostsContainer.innerHTML = '<p>Không có bài viết ẩn nào.</p>';
+                    return;
+                }
+
+                posts.forEach(post => {
+                    const comments = Array.isArray(post.comments) ? post.comments : [];
+                    const postElement = document.createElement('div');
+                    postElement.className = 'post';
+
+                    // Kiểm tra phần mở rộng của mediaUrl để xác định loại file
+                    const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+
+                    postElement.innerHTML = `
+                                    <div class="post-header">
+                                        <img src="/HinhAnh/avatar.jpg" alt="Avatar">
+                                        <div>
+                                            <div class="author">${post.author || 'Unknown'}</div>
+                                            <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
+                                        </div>
+                                        <div class="post-settings ms-auto">
+                                            <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
+                                            <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
+                                                <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
+                                                <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                                                <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                                    ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="post-content">
+                                        <h6>${post.title || ''}</h6>
+                                        <p>${post.content || ''}</p>
+                                        ${post.mediaUrl ? `
+                                            <div class="media-container">
+                                                ${isVideo ?
+                                `<video src="${post.mediaUrl}" controls></video>` :
+                                `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
+                                            </div>` : ''}
+                                    </div>
+
+                                    <div class="post-actions">
+                                        <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
+                                            ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
+                                        </button>
+                                        <button onclick="openCommentBox(${post.id}, ${comments.length})">
+                                            Bình luận (${comments.length})
+                                        </button>
+                                    </div>
+
+                                    <!-- Form nhập comment (ẩn mặc định) -->
+                                    <div class="comment-form mt-3" id="comment-form-${post.id}">
+                                        <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
+                                        <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
+                                    </div>
+
+                                    <!-- Danh sách comment (ẩn mặc định) -->
+                                    <div class="comment-list mt-3" id="comments-container-${post.id}">
+                                        ${comments.length > 0
+                            ? comments.map(comment => `
+                                                <div class="comment-item">
+                                                    <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
+                                                    <br>
+                                                    <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
+                                                </div>
+                                            `).join('')
+                            : '<p>Chưa có bình luận nào.</p>'
+                        }
+                                    </div>
+                                `;
+                    hiddenPostsContainer.appendChild(postElement);
                 });
-                let posts = response.data;
+            }
 
-                // Sắp xếp theo bộ lọc
+            function displayPosts(posts) {
+                const container = document.getElementById('posts-container');
+                container.innerHTML = '';
+
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<p>Không có bài viết nào để hiển thị.</p>';
+                    return;
+                }
+
+                posts.forEach(post => {
+                    const comments = Array.isArray(post.comments) ? post.comments : [];
+                    const postElement = document.createElement('div');
+                    postElement.className = 'post';
+
+                    // Kiểm tra phần mở rộng của mediaUrl để xác định loại file
+                    const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+
+                    postElement.innerHTML = `
+                                        <div class="post-header">
+                                            <img src="/HinhAnh/avatar.jpg" alt="Avatar">
+                                            <div>
+                                                <div class="author">${post.author || 'Unknown'}</div>
+                                                <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
+                                            </div>
+                                            ${post.isAuthor ? `
+                                            <div class="post-settings ms-auto">
+                                                <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
+                                                <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
+                                                    <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
+                                                    <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                                                    <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                                        ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                                </div>
+                                            </div>` : ''}
+                                        </div>
+
+                                        <div class="post-content">
+                                            <h6>${post.title || ''}</h6>
+                                            <p>${post.content || ''}</p>
+                                            ${post.mediaUrl ? `
+                                                <div class="media-container">
+                                                    ${isVideo ?
+                                `<video src="${post.mediaUrl}" controls></video>` :
+                                `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
+                                                </div>` : ''}
+                                        </div>
+
+                                        <div class="post-actions">
+                                            <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
+                                                ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
+                                            </button>
+                                            <button onclick="openCommentBox(${post.id}, ${comments.length})">
+                                                Bình luận (${comments.length})
+                                            </button>
+                                        </div>
+
+                                        <!-- Form nhập comment (ẩn mặc định) -->
+                                        <div class="comment-form mt-3" id="comment-form-${post.id}">
+                                            <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
+                                            <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
+                                        </div>
+
+                                        <!-- Danh sách comment (ẩn mặc định) -->
+                                        <div class="comment-list mt-3" id="comments-container-${post.id}">
+                                            ${comments.length > 0
+                            ? comments.map(comment => `
+                                                    <div class="comment-item">
+                                                        <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
+                                                        <br>
+                                                        <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
+                                                    </div>
+                                                `).join('')
+                            : '<p>Chưa có bình luận nào.</p>'
+                        }
+                                        </div>
+                                    `;
+                    container.appendChild(postElement);
+                });
+            }
+
+            function filterPosts(filterType) {
+                loadPosts(filterType);
+            }
+
+            function filterComments(postId, filterType) {
+                const commentsContainer = document.getElementById(`comments-container-${postId}`);
+                const comments = Array.from(commentsContainer.getElementsByClassName('comment-item'));
+
                 if (filterType === 'newest') {
-                    posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    comments.sort((a, b) => {
+                        const timeA = new Date(a.querySelector('small').textContent.split(' - ')[1] || '');
+                        const timeB = new Date(b.querySelector('small').textContent.split(' - ')[1] || '');
+                        return timeB - timeA;
+                    });
                 } else if (filterType === 'oldest') {
-                    posts.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                } else if (filterType === 'most-liked') {
-                    posts.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+                    comments.sort((a, b) => {
+                        const timeA = new Date(a.querySelector('small').textContent.split(' - ')[1] || '');
+                        const timeB = new Date(b.querySelector('small').textContent.split(' - ')[1] || '');
+                        return timeA - timeB;
+                    });
                 }
 
-                displayPosts(posts);
-            } catch (error) {
-                console.error('Error loading posts:', error);
-                document.getElementById('posts-container').innerHTML = '<p>Đã xảy ra lỗi khi tải bài viết.</p>';
-            }
-        }
-        // Function to load hidden posts
-        async function loadHiddenPosts() {
-            try {
-                const response = await axios.get(`${API_URL}/Post/user/hidden`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const hiddenPosts = response.data;
-                displayHiddenPosts(hiddenPosts);
-            } catch (error) {
-                console.error('Error loading hidden posts:', error);
-                alert('Không thể tải bài viết ẩn');
-            }
-        }
-
-        // Function to display hidden posts
-        function displayHiddenPosts(posts) {
-            const hiddenPostsContainer = document.getElementById('hidden-posts-container');
-            hiddenPostsContainer.innerHTML = '';
-
-            if (!posts || posts.length === 0) {
-                hiddenPostsContainer.innerHTML = '<p>Không có bài viết ẩn nào.</p>';
-                return;
+                commentsContainer.innerHTML = '';
+                comments.forEach(comment => commentsContainer.appendChild(comment));
             }
 
-            posts.forEach(post => {
-                const comments = Array.isArray(post.comments) ? post.comments : [];
-                const postElement = document.createElement('div');
-                postElement.className = 'post';
-
-                // Kiểm tra phần mở rộng của mediaUrl để xác định loại file
-                const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
-
-                postElement.innerHTML = `
-            <div class="post-header">
-                <img src="/HinhAnh/avatar.jpg" alt="Avatar">
-                <div>
-                    <div class="author">${post.author || 'Unknown'}</div>
-                    <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
-                </div>
-                <div class="post-settings ms-auto">
-                    <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
-                    <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
-                        <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
-                        <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="post-content">
-                <h6>${post.title || ''}</h6>
-                <p>${post.content || ''}</p>
-                ${post.mediaUrl ? `
-                    <div class="media-container">
-                        ${isVideo ?
-                            `<video src="${post.mediaUrl}" controls></video>` :
-                            `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
-                    </div>` : ''}
-            </div>
-
-            <div class="post-actions">
-                <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
-                    ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
-                </button>
-                <button onclick="toggleHidePost(${post.id}, true)">
-                    Hiển thị lại
-                </button>
-                <button onclick="openCommentBox(${post.id}, ${comments.length})">
-                    Bình luận (${comments.length})
-                </button>
-            </div>
-
-            <!-- Form nhập comment (ẩn mặc định) -->
-            <div class="comment-form mt-3" id="comment-form-${post.id}">
-                <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
-                <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
-            </div>
-
-            <!-- Danh sách comment (ẩn mặc định) -->
-            <div class="comment-list mt-3" id="comments-container-${post.id}">
-                ${comments.length > 0
-                        ? comments.map(comment => `
-                        <div class="comment-item">
-                            <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
-                            <br>
-                            <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
-                        </div>
-                    `).join('')
-                        : '<p>Chưa có bình luận nào.</p>'
+            async function likePost(postId, button) {
+                try {
+                    const response = await axios.post(`${API_URL}/Like/post/${postId}`, {}, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const { message, action } = response.data;
+                    const likeCount = parseInt(button.textContent.match(/\d+/)?.[0]) || 0;
+                    if (action === "Liked") {
+                        button.textContent = `Bỏ thích (${likeCount + 1})`;
+                        button.classList.add('liked');
+                    } else if (action === "Unliked") {
+                        button.textContent = `Thích (${likeCount - 1 >= 0 ? likeCount - 1 : 0})`;
+                        button.classList.remove('liked');
                     }
-            </div>
-        `;
-                hiddenPostsContainer.appendChild(postElement);
-            });
-        }
-
-        function displayPosts(posts) {
-            const container = document.getElementById('posts-container');
-            container.innerHTML = '';
-
-            if (!posts || posts.length === 0) {
-                container.innerHTML = '<p>Không có bài viết nào để hiển thị.</p>';
-                return;
+                    alert(message);
+                    loadPosts();
+                } catch (error) {
+                    console.error('Error liking post:', error);
+                    alert('Không thể xử lý lượt thích');
+                }
             }
 
-            posts.forEach(post => {
-                const comments = Array.isArray(post.comments) ? post.comments : [];
-                const postElement = document.createElement('div');
-                postElement.className = 'post';
+            // Add function to hide/unhide post
+            async function toggleHidePost(postId, isHidden) {
+                try {
+                    const response = await axios.put(`${API_URL}/Post/${postId}/${isHidden ? 'unhide' : 'hide'}`, {}, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    alert(response.data);
+                    loadPosts();
+                } catch (error) {
+                    console.error('Error hiding/unhiding post:', error);
+                    alert('Không thể ẩn/hiển thị lại bài viết');
+                }
+            }
 
-                // Kiểm tra phần mở rộng của mediaUrl để xác định loại file
-                const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+            async function addComment(postId) {
+                const content = document.getElementById(`comment-input-${postId}`).value;
+                if (!content) {
+                    alert('Vui lòng nhập nội dung bình luận');
+                    return;
+                }
+                try {
+                    await axios.post(`${API_URL}/Comment`, { postId, content }, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    document.getElementById(`comment-input-${postId}`).value = '';
+                    loadPosts();
+                } catch (error) {
+                    console.error('Error adding comment:', error);
+                    alert('Không thể thêm bình luận');
+                }
+            }
 
-                postElement.innerHTML = `
-                <div class="post-header">
-                    <img src="/HinhAnh/avatar.jpg" alt="Avatar">
-                    <div>
-                        <div class="author">${post.author || 'Unknown'}</div>
-                        <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
-                    </div>
-                    ${post.isAuthor ? `
-                    <div class="post-settings ms-auto">
-                        <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
-                        <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
-                            <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
-                            <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
-                        </div>
-                    </div>` : ''}
-                </div>
+            // Hàm mở/tắt form và danh sách comment
+            function openCommentBox(postId, totalComments) {
+                const form = document.getElementById(`comment-form-${postId}`);
+                const list = document.getElementById(`comments-container-${postId}`);
+                form.style.display = (form.style.display === 'none' || !form.style.display) ? 'block' : 'none';
+                list.style.display = (list.style.display === 'none' || !list.style.display) ? 'block' : 'none';
+            }
 
-                <div class="post-content">
-                    <h6>${post.title || ''}</h6>
-                    <p>${post.content || ''}</p>
-                    ${post.mediaUrl ? `
-                        <div class="media-container">
-                            ${isVideo ?
-                            `<video src="${post.mediaUrl}" controls></video>` :
-                            `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
-                        </div>` : ''}
-                </div>
+            // Popup đăng bài
+            const postForm = document.getElementById('post-form');
+            postForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('post-title').value;
+                const content = document.getElementById('post-content').value;
+                const mediaFile = document.getElementById('media-upload').files[0];
 
-                <div class="post-actions">
-                    <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
-                        ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
-                    </button>
-                        ${post.isAuthor || userRole === 'Admin' ? `
-                        <button onclick="toggleHidePost(${post.id}, ${post.isHidden})">
-                            ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
-                        </button>` : ''}
-                    <button onclick="openCommentBox(${post.id}, ${comments.length})">
-                        Bình luận (${comments.length})
-                    </button>
-                </div>
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+                if (mediaFile) {
+                    formData.append('media', mediaFile);
+                }
 
-                <!-- Form nhập comment (ẩn mặc định) -->
-                <div class="comment-form mt-3" id="comment-form-${post.id}">
-                    <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
-                    <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
-                </div>
-
-                <!-- Danh sách comment (ẩn mặc định) -->
-                <div class="comment-list mt-3" id="comments-container-${post.id}">
-                    ${comments.length > 0
-                        ? comments.map(comment => `
-                            <div class="comment-item">
-                                <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
-                                <br>
-                                <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
-                            </div>
-                        `).join('')
-                        : '<p>Chưa có bình luận nào.</p>'
+                try {
+                    if (currentPostId) {
+                        await axios.put(`${API_URL}/Post/${currentPostId}`, formData, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        });
+                        alert('Bài viết đã được cập nhật');
+                    } else {
+                        await axios.post(`${API_URL}/Post`, formData, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        });
+                        alert('Bài viết đã được đăng');
                     }
-                </div>
-            `;
-                container.appendChild(postElement);
-            });
-        }
-
-        function filterPosts(filterType) {
-            loadPosts(filterType);
-        }
-
-        function filterComments(postId, filterType) {
-            const commentsContainer = document.getElementById(`comments-container-${postId}`);
-            const comments = Array.from(commentsContainer.getElementsByClassName('comment-item'));
-
-            if (filterType === 'newest') {
-                comments.sort((a, b) => {
-                    const timeA = new Date(a.querySelector('small').textContent.split(' - ')[1] || '');
-                    const timeB = new Date(b.querySelector('small').textContent.split(' - ')[1] || '');
-                    return timeB - timeA;
-                });
-            } else if (filterType === 'oldest') {
-                comments.sort((a, b) => {
-                    const timeA = new Date(a.querySelector('small').textContent.split(' - ')[1] || '');
-                    const timeB = new Date(b.querySelector('small').textContent.split(' - ')[1] || '');
-                    return timeA - timeB;
-                });
-            }
-
-            commentsContainer.innerHTML = '';
-            comments.forEach(comment => commentsContainer.appendChild(comment));
-        }
-
-        async function likePost(postId, button) {
-            try {
-                const response = await axios.post(`${API_URL}/Like/post/${postId}`, {}, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const { message, action } = response.data;
-                const likeCount = parseInt(button.textContent.match(/\d+/)?.[0]) || 0;
-                if (action === "Liked") {
-                    button.textContent = `Bỏ thích (${likeCount + 1})`;
-                    button.classList.add('liked');
-                } else if (action === "Unliked") {
-                    button.textContent = `Thích (${likeCount - 1 >= 0 ? likeCount - 1 : 0})`;
-                    button.classList.remove('liked');
-                }
-                alert(message);
-                loadPosts();
-            } catch (error) {
-                console.error('Error liking post:', error);
-                alert('Không thể xử lý lượt thích');
-            }
-        }
-
-        // Add function to hide/unhide post
-        async function toggleHidePost(postId, isHidden) {
-            try {
-                const response = await axios.put(`${API_URL}/Post/${postId}/${isHidden ? 'unhide' : 'hide'}`, {}, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                alert(response.data);
-                loadPosts();
-            } catch (error) {
-                console.error('Error hiding/unhiding post:', error);
-                alert('Không thể ẩn/hiển thị lại bài viết');
-            }
-        }
-
-        async function addComment(postId) {
-            const content = document.getElementById(`comment-input-${postId}`).value;
-            if (!content) {
-                alert('Vui lòng nhập nội dung bình luận');
-                return;
-            }
-            try {
-                await axios.post(`${API_URL}/Comment`, { postId, content }, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                document.getElementById(`comment-input-${postId}`).value = '';
-                loadPosts();
-            } catch (error) {
-                console.error('Error adding comment:', error);
-                alert('Không thể thêm bình luận');
-            }
-        }
-
-        // Hàm mở/tắt form và danh sách comment
-        function openCommentBox(postId, totalComments) {
-            const form = document.getElementById(`comment-form-${postId}`);
-            const list = document.getElementById(`comments-container-${postId}`);
-            form.style.display = (form.style.display === 'none' || !form.style.display) ? 'block' : 'none';
-            list.style.display = (list.style.display === 'none' || !list.style.display) ? 'block' : 'none';
-        }
-
-        // Popup đăng bài
-        const postForm = document.getElementById('post-form');
-        postForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = document.getElementById('post-title').value;
-            const content = document.getElementById('post-content').value;
-            const mediaFile = document.getElementById('media-upload').files[0];
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            if (mediaFile) {
-                formData.append('media', mediaFile);
-            }
-
-            try {
-                if (currentPostId) {
-                    await axios.put(`${API_URL}/Post/${currentPostId}`, formData, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    });
-                    alert('Bài viết đã được cập nhật');
-                } else {
-                    await axios.post(`${API_URL}/Post`, formData, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    });
-                    alert('Bài viết đã được đăng');
-                }
-                closePostPopup();
-                loadPosts();
-                currentPostId = null;
-            } catch (error) {
-                console.error('Error:', error);
-                alert(error.response?.data || 'Không thể xử lý bài viết');
-            }
-        });
-
-        // Preview ảnh/video khi chọn file
-        document.getElementById('media-upload').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const mediaPreview = document.getElementById('media-preview');
-            mediaPreview.innerHTML = '';
-
-            if (file) {
-                const fileType = file.type;
-                const url = URL.createObjectURL(file);
-
-                if (fileType.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    mediaPreview.appendChild(img);
-                } else if (fileType.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = url;
-                    video.controls = true;
-                    mediaPreview.appendChild(video);
-                }
-            }
-        });
-
-        function openPostPopup(mode) {
-            const popup = document.getElementById('post-popup');
-            const titleElement = popup.querySelector('h3');
-            if (mode === 'create') {
-                titleElement.textContent = 'Đăng bài mới';
-                document.getElementById('post-title').value = '';
-                document.getElementById('post-content').value = '';
-                document.getElementById('media-upload').value = '';
-                document.getElementById('media-preview').innerHTML = '';
-                currentPostId = null;
-            } else if (mode === 'edit') {
-                titleElement.textContent = 'Sửa bài viết';
-            }
-            popup.style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
-
-        function closePostPopup() {
-            document.getElementById('post-popup').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('media-preview').innerHTML = '';
-            document.getElementById('media-upload').value = '';
-            currentPostId = null;
-        }
-
-        async function showNotifications(type) {
-            try {
-                const response = await axios.get(`${API_URL}/Notification`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const notifications = response.data;
-                const notificationList = document.getElementById('notification-list');
-                notificationList.innerHTML = '';
-
-                const filteredNotifications = notifications.filter(n => {
-                    if (type === 'likes') return n.content.includes('thích');
-                    if (type === 'comments') return n.content.includes('bình luận');
-                    return false;
-                });
-
-                if (filteredNotifications.length === 0) {
-                    notificationList.innerHTML = '<p>Không có thông báo nào.</p>';
-                } else {
-                    filteredNotifications.forEach(notification => {
-                        const item = document.createElement('div');
-                        item.className = 'notification-item';
-                        item.style.cursor = 'pointer';
-                        item.innerHTML = `
-                                <p>${notification.content}</p>
-                                <small>${new Date(notification.createdAt).toLocaleString()}</small>
-                            `;
-                        if (notification.postId) {
-                            item.addEventListener('click', () => {
-                                window.location.href = `post-detail.html?id=${notification.postId}`;
-                            });
-                        }
-                        notificationList.appendChild(item);
-                    });
-                }
-
-                document.getElementById('notification-popup').style.display = 'block';
-                document.getElementById('notification-overlay').style.display = 'block';
-            } catch (error) {
-                console.error('Lỗi khi tải thông báo:', error);
-                alert('Không thể tải thông báo. Vui lòng thử lại sau.');
-            }
-        }
-
-        function closeNotificationPopup() {
-            document.getElementById('notification-popup').style.display = 'none';
-            document.getElementById('notification-overlay').style.display = 'none';
-        }
-
-        function toggleMenu() {
-            const menu = document.getElementById('menu-dropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        }
-
-        function togglePostMenu(postId) {
-            const menu = document.getElementById(`post-menu-${postId}`);
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        document.addEventListener('click', (event) => {
-            const menus = document.querySelectorAll('.post-menu');
-            menus.forEach(menu => {
-                if (!menu.contains(event.target) && !event.target.classList.contains('btn-link')) {
-                    menu.style.display = 'none';
+                    closePostPopup();
+                    loadPosts();
+                    currentPostId = null;
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert(error.response?.data || 'Không thể xử lý bài viết');
                 }
             });
-        });
 
-        function editPost(postId) {
-            console.log('Hàm editPost được gọi với postId:', postId);
-            axios.get(`${API_URL}/Post/${postId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }).then(response => {
-                console.log(response.data);
-                const post = response.data;
-                document.getElementById('post-title').value = post.title;
-                document.getElementById('post-content').value = post.content;
-                currentPostId = postId;
-
+            // Preview ảnh/video khi chọn file
+            document.getElementById('media-upload').addEventListener('change', function (e) {
+                const file = e.target.files[0];
                 const mediaPreview = document.getElementById('media-preview');
                 mediaPreview.innerHTML = '';
-                if (post.mediaUrl) {
-                    const isVideo = ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
-                    if (isVideo) {
-                        mediaPreview.innerHTML = `<video src="${post.mediaUrl}" controls></video>`;
-                    } else {
-                        mediaPreview.innerHTML = `<img src="${post.mediaUrl}" alt="Media Preview">`;
+
+                if (file) {
+                    const fileType = file.type;
+                    const url = URL.createObjectURL(file);
+
+                    if (fileType.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        mediaPreview.appendChild(img);
+                    } else if (fileType.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = url;
+                        video.controls = true;
+                        mediaPreview.appendChild(video);
                     }
                 }
-
-                openPostPopup('edit');
-            }).catch(error => {
-                console.error('Lỗi khi lấy dữ liệu bài viết:', error);
-                alert('Không thể tải dữ liệu bài viết');
             });
-        }
 
-        function deletePost(postId) {
-            if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-                axios.delete(`${API_URL}/Post/${postId}`, {
+            function openPostPopup(mode) {
+                const popup = document.getElementById('post-popup');
+                const titleElement = popup.querySelector('h3');
+                if (mode === 'create') {
+                    titleElement.textContent = 'Đăng bài mới';
+                    document.getElementById('post-title').value = '';
+                    document.getElementById('post-content').value = '';
+                    document.getElementById('media-upload').value = '';
+                    document.getElementById('media-preview').innerHTML = '';
+                    currentPostId = null;
+                } else if (mode === 'edit') {
+                    titleElement.textContent = 'Sửa bài viết';
+                }
+                popup.style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+            }
+
+            function closePostPopup() {
+                document.getElementById('post-popup').style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+                document.getElementById('media-preview').innerHTML = '';
+                document.getElementById('media-upload').value = '';
+                currentPostId = null;
+            }
+
+            async function showNotifications(type) {
+                try {
+                    const response = await axios.get(`${API_URL}/Notification`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const notifications = response.data;
+                    const notificationList = document.getElementById('notification-list');
+                    notificationList.innerHTML = '';
+
+                    const filteredNotifications = notifications.filter(n => {
+                        if (type === 'likes') return n.content.includes('thích');
+                        if (type === 'comments') return n.content.includes('bình luận');
+                        return false;
+                    });
+
+                    if (filteredNotifications.length === 0) {
+                        notificationList.innerHTML = '<p>Không có thông báo nào.</p>';
+                    } else {
+                        filteredNotifications.forEach(notification => {
+                            const item = document.createElement('div');
+                            item.className = 'notification-item';
+                            item.style.cursor = 'pointer';
+                            item.innerHTML = `
+                                                        <p>${notification.content}</p>
+                                                        <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                                                    `;
+                            if (notification.postId) {
+                                item.addEventListener('click', () => {
+                                    window.location.href = `post-detail.html?id=${notification.postId}`;
+                                });
+                            }
+                            notificationList.appendChild(item);
+                        });
+                    }
+
+                    document.getElementById('notification-popup').style.display = 'block';
+                    document.getElementById('notification-overlay').style.display = 'block';
+                } catch (error) {
+                    console.error('Lỗi khi tải thông báo:', error);
+                    alert('Không thể tải thông báo. Vui lòng thử lại sau.');
+                }
+            }
+
+            function closeNotificationPopup() {
+                document.getElementById('notification-popup').style.display = 'none';
+                document.getElementById('notification-overlay').style.display = 'none';
+            }
+
+            function toggleMenu() {
+                const menu = document.getElementById('menu-dropdown');
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
+
+            function logout() {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+
+            function togglePostMenu(postId) {
+                const menu = document.getElementById(`post-menu-${postId}`);
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
+
+            document.addEventListener('click', (event) => {
+                const menus = document.querySelectorAll('.post-menu');
+                menus.forEach(menu => {
+                    if (!menu.contains(event.target) && !event.target.classList.contains('btn-link')) {
+                        menu.style.display = 'none';
+                    }
+                });
+            });
+
+            function editPost(postId) {
+                console.log('Hàm editPost được gọi với postId:', postId);
+                axios.get(`${API_URL}/Post/${postId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
-                }).then(() => {
-                    alert('Bài viết đã được xóa');
-                    loadPosts();
+                }).then(response => {
+                    console.log(response.data);
+                    const post = response.data;
+                    document.getElementById('post-title').value = post.title;
+                    document.getElementById('post-content').value = post.content;
+                    currentPostId = postId;
+
+                    const mediaPreview = document.getElementById('media-preview');
+                    mediaPreview.innerHTML = '';
+                    if (post.mediaUrl) {
+                        const isVideo = ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
+                        if (isVideo) {
+                            mediaPreview.innerHTML = `<video src="${post.mediaUrl}" controls></video>`;
+                        } else {
+                            mediaPreview.innerHTML = `<img src="${post.mediaUrl}" alt="Media Preview">`;
+                        }
+                    }
+
+                    openPostPopup('edit');
                 }).catch(error => {
-                    console.error('Lỗi khi xóa:', error.response);
-                    alert('Không thể xóa bài viết');
+                    console.error('Lỗi khi lấy dữ liệu bài viết:', error);
+                    alert('Không thể tải dữ liệu bài viết');
                 });
             }
-        }
 
-        // Hàm mở popup phóng to ảnh
-        function openImageZoomPopup(imageUrl) {
-            const popup = document.getElementById('image-zoom-popup');
-            const overlay = document.getElementById('image-zoom-overlay');
-            const zoomedImage = document.getElementById('zoomed-image');
-
-            zoomedImage.src = imageUrl;
-            popup.style.display = 'block';
-            overlay.style.display = 'block';
-        }
-
-        // Hàm đóng popup phóng to ảnh
-        function closeImageZoomPopup() {
-            const popup = document.getElementById('image-zoom-popup');
-            const overlay = document.getElementById('image-zoom-overlay');
-            popup.style.display = 'none';
-            overlay.style.display = 'none';
-        }
-        // Hàm chuyển hướng dựa trên vai trò người dùng
-        function redirectToHomepage() {
-            if (userRole === 'Admin') {
-                window.location.href = 'admin-homepage.html';
-            } else {
-                window.location.href = 'homepage.html';
+            function deletePost(postId) {
+                if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                    axios.delete(`${API_URL}/Post/${postId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(() => {
+                        alert('Bài viết đã được xóa');
+                        loadPosts();
+                    }).catch(error => {
+                        console.error('Lỗi khi xóa:', error.response);
+                        alert('Không thể xóa bài viết');
+                    });
+                }
             }
-        }
-        // Tải bài viết khi vào trang profile
-        loadPosts('newest');
-        loadUserInfo();
-    </script>
+
+            // Hàm mở popup phóng to ảnh
+            function openImageZoomPopup(imageUrl) {
+                const popup = document.getElementById('image-zoom-popup');
+                const overlay = document.getElementById('image-zoom-overlay');
+                const zoomedImage = document.getElementById('zoomed-image');
+
+                zoomedImage.src = imageUrl;
+                popup.style.display = 'block';
+                overlay.style.display = 'block';
+            }
+
+            // Hàm đóng popup phóng to ảnh
+            function closeImageZoomPopup() {
+                const popup = document.getElementById('image-zoom-popup');
+                const overlay = document.getElementById('image-zoom-overlay');
+                popup.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+            // Hàm chuyển hướng dựa trên vai trò người dùng
+            function redirectToHomepage() {
+                if (userRole === 'Admin') {
+                    window.location.href = 'admin-homepage.html';
+                } else {
+                    window.location.href = 'homepage.html';
+                }
+            }
+            // Tải bài viết khi vào trang profile
+            loadPosts('newest');
+            loadUserInfo();
+        </script>
 </body>
 </html>

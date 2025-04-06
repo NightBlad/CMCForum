@@ -160,6 +160,21 @@
 </head>
 <body>
     <div class="user-menu">
+        <div class="header-section">
+            <h2>Quản lý người dùng</h2>
+            <div class="d-flex">
+                <div class="search-bar me-3">
+                    <input type="text" id="search-input" placeholder="Tìm kiếm người dùng..." class="form-control">
+                    <button id="search-button" class="btn btn-outline-secondary">
+                        <img src="/HinhAnh/loupe.png" alt="Search" style="width: 20px; height: 20px;">
+                    </button>
+                </div>
+                <button class="btn btn-primary" onclick="openUserForm('create')">
+                    <i class="bi bi-plus-circle me-1"></i> Thêm người dùng mới
+                </button>
+            </div>
+        </div>
+
         <div class="user-avatar" onclick="toggleMenu()">
             <img src="/HinhAnh/avatar.jpg" alt="Avatar" class="rounded-circle">
         </div>
@@ -181,20 +196,6 @@
     </div>
 
     <div class="content">
-        <div class="header-section">
-            <h2>Quản lý người dùng</h2>
-            <div class="d-flex">
-                <div class="search-bar me-3">
-                    <input type="text" id="search-input" placeholder="Tìm kiếm người dùng..." class="form-control">
-                    <button id="search-button" class="btn btn-outline-secondary">
-                        <img src="/HinhAnh/loupe.png" alt="Search" style="width: 20px; height: 20px;">
-                    </button>
-                </div>
-                <button class="btn btn-primary" onclick="openUserForm('create')">
-                    <i class="bi bi-plus-circle me-1"></i> Thêm người dùng mới
-                </button>
-            </div>
-        </div>
 
         <div class="user-table-container">
             <div class="table-responsive user-table">

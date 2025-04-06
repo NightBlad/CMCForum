@@ -475,6 +475,8 @@
                                 <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
                                     <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
                                     <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                                    <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                        ${post.isHidden ? 'Hiện bài viết' : 'Ẩn bài viết'}
                                 </div>
                             </div>` : ''}
                         </div>
@@ -494,10 +496,6 @@
                             <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
                                 ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
                             </button>
-                            ${post.isAuthor || userRole === 'Admin' ? `
-                            <button onclick="toggleHidePost(${post.id}, ${post.isHidden})">
-                                ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
-                            </button>` : ''}
                             <button onclick="openCommentBox(${post.id}, ${comments.length})">
                                 Bình luận (${comments.length})
                             </button>
