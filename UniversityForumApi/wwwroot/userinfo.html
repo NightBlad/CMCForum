@@ -250,7 +250,7 @@
         const API_URL = 'https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/api';
         const token = localStorage.getItem('token');
         let userRole = '';
-
+        let currentUserData = {};
         if (!token) {
             window.location.href = 'login.html';
         }
@@ -258,25 +258,72 @@
         // Tải thông tin cá nhân từ API
         async function loadUserInfo() {
             try {
-                const response = await axios.get(`${API_URL}/Auth/info`, {
+                const response = await axios.get(`${API_URL}/User/Profile`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const user = response.data;
+                currentUserData = user;
                 userRole = user.role;
-                const userInfoContainer = document.getElementById('user-info');
+                const userInfoContainer = document.getElementById('info-display');
                 userInfoContainer.innerHTML = `
-                        <h3>Thông tin của bạn</h3>
-                        <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p>
-                        <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
-                        <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
-                        <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
-                    `;
+                    <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p>
+                    <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
+                    <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
+                    <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
+                `;
             } catch (error) {
                 console.error('Lỗi khi tải thông tin cá nhân:', error);
-                document.getElementById('user-info').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
+                document.getElementById('info-display').innerHTML = '<p>Đã xảy ra lỗi khi tải thông tin cá nhân.</p>';
+            }
+        }
+        function toggleEdit() {
+            const displayContainer = document.getElementById('info-display');
+            const editContainer = document.getElementById('info-edit');
+            const editButton = document.getElementById('edit-button');
+
+            if (displayContainer.style.display !== 'none') {
+                // Switch to edit mode
+                displayContainer.style.display = 'none';
+                editContainer.style.display = 'block';
+                editButton.style.display = 'none';
+
+                // Populate form with current data
+                document.getElementById('edit-fullname').value = currentUserData.fullName || '';
+                document.getElementById('edit-dob').value = currentUserData.dateOfBirth ? new Date(currentUserData.dateOfBirth).toISOString().split('T')[0] : '';
+                document.getElementById('edit-contact').value = currentUserData.contact || '';
             }
         }
 
+        function cancelEdit() {
+            document.getElementById('info-display').style.display = 'block';
+            document.getElementById('info-edit').style.display = 'none';
+            document.getElementById('edit-button').style.display = 'block';
+        }
+
+        // Register the form submit event
+        document.getElementById('edit-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const updatedData = {
+                fullName: document.getElementById('edit-fullname').value,
+                dateOfBirth: document.getElementById('edit-dob').value,
+                contact: document.getElementById('edit-contact').value
+            };
+
+            try {
+                const response = await axios.put(`${API_URL}/User/UpdateProfile`, updatedData, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                // Update successful
+                alert('Cập nhật thông tin thành công!');
+                cancelEdit();
+                loadUserInfo(); // Reload the user info
+            } catch (error) {
+                console.error('Lỗi khi cập nhật thông tin:', error);
+                alert('Không thể cập nhật thông tin. Vui lòng thử lại sau.');
+            }
+        });
         // Các hàm hỗ trợ giống homepage
         function openPostPopup() {
             document.getElementById('post-popup').style.display = 'block';
