@@ -170,7 +170,7 @@ namespace UniversityForumApi.Controllers
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var posts = await _context.Posts
-                .Where(p => p.UserId == userId && p.Status == "Approved")
+                .Where(p => p.UserId == userId && p.Status == "Approved" && !p.IsHidden) // Added !p.IsHidden condition
                 .Include(p => p.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
@@ -180,10 +180,11 @@ namespace UniversityForumApi.Controllers
                     Id = p.Id,
                     Title = p.Title,
                     Content = p.Content,
-                    MediaUrl = p.MediaUrl, // Thêm trường này
+                    MediaUrl = p.MediaUrl,
                     Author = p.User.FullName,
                     CreatedAt = p.CreatedAt,
                     LikeCount = p.Likes.Count,
+                    IsHidden = p.IsHidden, // Include this property in the response
                     Comments = p.Comments.Select(c => new
                     {
                         Id = c.Id,
@@ -294,7 +295,7 @@ namespace UniversityForumApi.Controllers
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.User)
-                .Where(p => p.Id == id && p.Status == "Approved" && !p.IsHidden) // Exclude hidden posts
+                .Where(p => p.Id == id && p.Status == "Approved")
                 .Select(p => new
                 {
                     Id = p.Id,
@@ -345,6 +346,7 @@ namespace UniversityForumApi.Controllers
                     Author = p.User.FullName,
                     CreatedAt = p.CreatedAt,
                     LikeCount = p.Likes.Count,
+                    IsHidden = p.IsHidden,
                     Comments = p.Comments.Select(c => new
                     {
                         Id = c.Id,
