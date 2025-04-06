@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniversityForumApi.Models;
-
+using UniversityForumApi.DTOs;
 namespace UniversityForumApi.Controllers
 {
     [Route("api/[controller]")]
@@ -83,5 +83,145 @@ namespace UniversityForumApi.Controllers
 
             return Ok("Bài viết đã bị từ chối");
         }
+        // GET: api/Admin/users
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = await _context.Users
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FullName,
+                    u.Username,
+                    u.DateOfBirth,
+                    u.Contact,
+                    u.Role
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        // GET: api/Admin/users/{id}
+        [HttpGet("users/{id}")]
+        public async Task<IActionResult> GetUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            return Ok(new
+            {
+                user.Id,
+                user.FullName,
+                user.Username,
+                user.DateOfBirth,
+                user.Contact,
+                user.Role
+            });
+        }
+
+        // POST: api/Admin/users
+        [HttpPost("users")]
+        public async Task<IActionResult> CreateUser([FromBody] UserCreateDto userDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Check if username already exists
+            if (await _context.Users.AnyAsync(u => u.Username == userDto.Username))
+                return BadRequest("Username already exists");
+
+            // Hash the password
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+
+            var user = new User
+            {
+                FullName = userDto.FullName,
+                DateOfBirth = userDto.DateOfBirth,
+                Contact = userDto.Contact,
+                Role = userDto.Role,
+                Username = userDto.Username,
+                PasswordHash = passwordHash
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, new
+            {
+                user.Id,
+                user.FullName,
+                user.Username,
+                user.DateOfBirth,
+                user.Contact,
+                user.Role
+            });
+        }
+
+        // PUT: api/Admin/users/{id}
+        [HttpPut("users/{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto userDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            // Check if username is being changed and already exists
+            if (userDto.Username != user.Username &&
+                await _context.Users.AnyAsync(u => u.Username == userDto.Username))
+                return BadRequest("Username already exists");
+
+            user.FullName = userDto.FullName;
+            user.DateOfBirth = userDto.DateOfBirth;
+            user.Contact = userDto.Contact;
+            user.Role = userDto.Role;
+            user.Username = userDto.Username;
+
+            // Update password if provided
+            if (!string.IsNullOrEmpty(userDto.Password))
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                user.Id,
+                user.FullName,
+                user.Username,
+                user.DateOfBirth,
+                user.Contact,
+                user.Role
+            });
+        }
+
+        // DELETE: api/Admin/users/{id}
+        [HttpDelete("users/{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            // Prevent deleting the last admin account
+            if (user.Role == "Admin" &&
+                await _context.Users.CountAsync(u => u.Role == "Admin") <= 1)
+                return BadRequest("Cannot delete the last admin account");
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok("User deleted successfully");
+        }
     }
 }
+
+    
