@@ -198,7 +198,47 @@ namespace UniversityForumApi.Controllers
             return Ok(posts);
         }
 
-        // Lấy danh sách bài viết đã duyệt (công khai)
+        // Hide a post (user or admin)
+        [HttpPut("{id}/hide")]
+        [Authorize]
+        public async Task<IActionResult> HidePost(int id)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var post = await _context.Posts.FindAsync(id);
+
+            if (post == null)
+                return NotFound("Bài viết không tồn tại");
+
+            if (post.UserId != userId && !User.IsInRole("Admin"))
+                return Forbid("Bạn không có quyền ẩn bài viết này");
+
+            post.IsHidden = true;
+            await _context.SaveChangesAsync();
+
+            return Ok("Bài viết đã được ẩn");
+        }
+
+        // Unhide a post (user or admin)
+        [HttpPut("{id}/unhide")]
+        [Authorize]
+        public async Task<IActionResult> UnhidePost(int id)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var post = await _context.Posts.FindAsync(id);
+
+            if (post == null)
+                return NotFound("Bài viết không tồn tại");
+
+            if (post.UserId != userId && !User.IsInRole("Admin"))
+                return Forbid("Bạn không có quyền hiển thị lại bài viết này");
+
+            post.IsHidden = false;
+            await _context.SaveChangesAsync();
+
+            return Ok("Bài viết đã được hiển thị lại");
+        }
+
+        // Update the GetPosts method to exclude hidden posts
         [HttpGet]
         public async Task<IActionResult> GetPosts([FromQuery] string? keyword = null)
         {
@@ -209,7 +249,7 @@ namespace UniversityForumApi.Controllers
                 .ThenInclude(c => c.User)
                 .Include(p => p.User)
                 .Include(p => p.Likes)
-                .Where(p => p.Status == "Approved");
+                .Where(p => p.Status == "Approved" && !p.IsHidden); // Exclude hidden posts
 
             // Thêm logic tìm kiếm nếu có từ khóa
             if (!string.IsNullOrEmpty(keyword))
@@ -243,7 +283,7 @@ namespace UniversityForumApi.Controllers
             return Ok(posts);
         }
 
-        // Lấy chi tiết bài viết theo ID
+        // Update the GetPostById method to exclude hidden posts
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPostById(int id)
         {
@@ -254,7 +294,7 @@ namespace UniversityForumApi.Controllers
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.User)
-                .Where(p => p.Id == id && p.Status == "Approved")
+                .Where(p => p.Id == id && p.Status == "Approved" && !p.IsHidden) // Exclude hidden posts
                 .Select(p => new
                 {
                     Id = p.Id,
@@ -282,6 +322,41 @@ namespace UniversityForumApi.Controllers
             }
 
             return Ok(post);
+        }
+
+        // Get hidden posts for the authenticated user
+        [HttpGet("user/hidden")]
+        [Authorize]
+        public async Task<IActionResult> GetUserHiddenPosts()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var posts = await _context.Posts
+                .Where(p => p.UserId == userId && p.IsHidden)
+                .Include(p => p.User)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                .ThenInclude(c => c.User)
+                .Select(p => new
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Content = p.Content,
+                    MediaUrl = p.MediaUrl,
+                    Author = p.User.FullName,
+                    CreatedAt = p.CreatedAt,
+                    LikeCount = p.Likes.Count,
+                    Comments = p.Comments.Select(c => new
+                    {
+                        Id = c.Id,
+                        Content = c.Content,
+                        Author = c.User.FullName,
+                        CreatedAt = c.CreatedAt
+                    }).ToList(),
+                    UserLiked = p.Likes.Any(l => l.UserId == userId),
+                    IsAuthor = true
+                })
+                .ToListAsync();
+            return Ok(posts);
         }
     }
 }

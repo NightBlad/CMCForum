@@ -50,7 +50,8 @@ namespace UniversityForumApi.Controllers
                 UserId = post.UserId,
                 Content = "Bài viết của bạn đã được duyệt",
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                PostId = post.Id // Include PostId in the notification
             };
             _context.Notifications.Add(notification);
 
@@ -75,7 +76,8 @@ namespace UniversityForumApi.Controllers
                 UserId = post.UserId,
                 Content = "Bài viết của bạn đã bị từ chối",
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                PostId = post.Id // Include PostId in the notification
             };
             _context.Notifications.Add(notification);
 

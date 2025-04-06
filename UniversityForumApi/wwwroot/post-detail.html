@@ -445,7 +445,7 @@
                         </div>
                         ${post.isAuthor ? `
                         <div class="post-settings ms-auto">
-                            <button class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
+                            <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
                             <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
                                 <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
                                 <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
@@ -466,6 +466,10 @@
                         <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
                             ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
                         </button>
+                            ${post.isAuthor || userRole === 'Admin' ? `
+                        <button onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                            ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                        </button>` : ''}
                     </div>
                 `;
         }
@@ -534,6 +538,19 @@
                 alert('Không thể xử lý lượt thích');
             }
         }
+
+        // Add function to hide/unhide post
+        async function toggleHidePost(postId, isHidden) {
+            try {
+                const response = await axios.put(`${API_URL}/Post/${postId}/${isHidden ? 'unhide' : 'hide'}`, {}, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                alert(response.data);
+                loadPost();
+            } catch (error) {
+                console.error('Error hiding/unhiding post:', error);
+                alert('Không thể ẩn/hiển thị lại bài viết');
+            }
 
         async function addComment() {
             const content = document.getElementById('comment-input').value;

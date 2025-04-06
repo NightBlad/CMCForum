@@ -13,6 +13,7 @@
         public DateTime? UpdatedAt { get; set; }
         public List<Comment> Comments { get; set; } = new List<Comment>();
         public List<Like> Likes { get; set; } = new List<Like>();
-        public string? MediaUrl { get; set; } // Thêm trường này để lưu URL của file, có thể null
+        public string? MediaUrl { get; set; }
+        public bool IsHidden { get; set; } // New property to mark posts as hidden
     }
 }

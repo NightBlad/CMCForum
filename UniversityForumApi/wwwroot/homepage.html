@@ -494,6 +494,10 @@
                             <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
                                 ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
                             </button>
+                            ${post.isAuthor || userRole === 'Admin' ? `
+                            <button onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                            </button>` : ''}
                             <button onclick="openCommentBox(${post.id}, ${comments.length})">
                                 Bình luận (${comments.length})
                             </button>
@@ -617,6 +621,20 @@
             } catch (error) {
                 console.error('Error liking post:', error);
                 alert('Không thể xử lý lượt thích');
+            }
+        }
+
+        // Add function to hide/unhide post
+        async function toggleHidePost(postId, isHidden) {
+            try {
+                const response = await axios.put(`${API_URL}/Post/${postId}/${isHidden ? 'unhide' : 'hide'}`, {}, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                alert(response.data);
+                loadPost();
+            } catch (error) {
+                console.error('Error hiding/unhiding post:', error);
+                alert('Không thể ẩn/hiển thị lại bài viết');
             }
         }
 
