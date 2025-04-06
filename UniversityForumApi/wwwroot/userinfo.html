@@ -190,6 +190,7 @@
         <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="redirectToHomepage()">
         <img src="/HinhAnh/like.png" alt="Lượt thích" onclick="showNotifications('likes')">
         <img src="/HinhAnh/comment.png" alt="Bình luận" onclick="showNotifications('comments')">
+        <img src="/HinhAnh/bell.png" alt="Thông báo" onclick="showNotifications('approvals')">
         <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="openPostPopup('create')">
     </div>
     <!-- Nội dung chính -->
@@ -341,19 +342,27 @@
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         }
+        // Replace the showNotifications function in homepage.html
         async function showNotifications(type) {
             try {
                 const response = await axios.get(`${API_URL}/Notification`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const notifications = response.data;
+
                 const notificationList = document.getElementById('notification-list');
                 notificationList.innerHTML = '';
-                const filteredNotifications = notifications.filter(n => {
-                    if (type === 'likes') return n.content.includes('thích');
-                    if (type === 'comments') return n.content.includes('bình luận');
-                    return false;
-                });
+
+                // Filter notifications based on type or show all if type is 'all'
+                const filteredNotifications = type === 'all'
+                    ? notifications
+                    : notifications.filter(n => {
+                        if (type === 'likes') return n.content.includes('thích');
+                        if (type === 'comments') return n.content.includes('bình luận');
+                        if (type === 'approvals') return n.content.includes('đã được duyệt') || n.content.includes('đã bị từ chối');
+                        return false;
+                    });
+
                 if (filteredNotifications.length === 0) {
                     notificationList.innerHTML = '<p>Không có thông báo nào.</p>';
                 } else {
@@ -361,18 +370,40 @@
                         const item = document.createElement('div');
                         item.className = 'notification-item';
                         item.style.cursor = 'pointer';
+
+                        // Format the notification content to be more readable
+                        let content = notification.content;
+
+                        // Add status indicator based on content
+                        let statusClass = '';
+                        if (content.includes('đã được duyệt')) {
+                            statusClass = 'text-success';
+                        } else if (content.includes('đã bị từ chối')) {
+                            statusClass = 'text-danger';
+                        }
+
                         item.innerHTML = `
-                                <p>${notification.content}</p>
-                                <small>${new Date(notification.createdAt).toLocaleString()}</small>
-                            `;
+                    <p class="${statusClass}">${content}</p>
+                    <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                `;
+
+                        // Add click event to navigate to the post if postId exists
                         if (notification.postId) {
                             item.addEventListener('click', () => {
-                                window.location.href = `post-detail.html?id=${notification.postId}`;
+                                if (notification.content.includes('đã bị từ chối')) {
+                                    // For rejected posts, just show an alert
+                                    alert('Bài viết này đã bị từ chối bởi admin.');
+                                } else {
+                                    // For other notifications, navigate to the post
+                                    window.location.href = `post-detail.html?id=${notification.postId}`;
+                                }
                             });
                         }
+
                         notificationList.appendChild(item);
                     });
                 }
+
                 document.getElementById('notification-popup').style.display = 'block';
                 document.getElementById('notification-overlay').style.display = 'block';
             } catch (error) {

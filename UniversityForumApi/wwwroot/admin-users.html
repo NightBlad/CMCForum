@@ -47,6 +47,7 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 20px;
+            padding-top: 40px;
         }
 
         .search-bar {
@@ -160,6 +161,24 @@
 </head>
 <body>
     <div class="user-menu">
+        <div class="user-avatar" onclick="toggleMenu()">
+            <img src="/HinhAnh/avatar.jpg" alt="Avatar" class="rounded-circle">
+        </div>
+        <div class="menu-dropdown" id="menu-dropdown">
+            <a href="profile.html" class="menu-item">Trang cá nhân</a>
+            <a href="userinfo.html" class="menu-item">Thông tin cá nhân</a>
+            <a href="#" class="menu-item" onclick="logout()">Đăng xuất</a>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="window.location.href='admin-homepage.html'">
+        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='admin-homepage.html'">
+        <img src="/HinhAnh/users.png" alt="Quản lý người dùng" onclick="window.location.href='admin-users.html'" title="Quản lý người dùng">
+        <img src="/HinhAnh/website.png" alt="Duyệt bài viết" onclick="window.location.href='review.html'">
+    </div>
+
+    <div class="content">
         <div class="header-section">
             <h2>Quản lý người dùng</h2>
             <div class="d-flex">
@@ -174,28 +193,6 @@
                 </button>
             </div>
         </div>
-
-        <div class="user-avatar" onclick="toggleMenu()">
-            <img src="/HinhAnh/avatar.jpg" alt="Avatar" class="rounded-circle">
-        </div>
-        <div class="menu-dropdown" id="menu-dropdown">
-            <a href="profile.html" class="menu-item">Trang cá nhân</a>
-            <a href="userinfo.html" class="menu-item">Thông tin cá nhân</a>
-            <a href="#" class="menu-item" onclick="logout()">Đăng xuất</a>
-        </div>
-    </div>
-
-    <div class="sidebar">
-        <img src="/HinhAnh/CMC-logo.png" alt="Logo CMC" onclick="window.location.href='admin-homepage.html'">
-        <img src="/HinhAnh/home.png" alt="Trang chủ" onclick="window.location.href='admin-homepage.html'">
-        <img src="/HinhAnh/like.png" alt="Lượt thích" onclick="showNotifications('likes')">
-        <img src="/HinhAnh/comment.png" alt="Bình luận" onclick="showNotifications('comments')">
-        <img src="/HinhAnh/post.png" alt="Đăng bài" onclick="openPostPopup('create')">
-        <img src="/HinhAnh/website.png" alt="Duyệt bài viết" onclick="window.location.href='review.html'">
-        <img src="/HinhAnh/users.png" alt="Quản lý người dùng" onclick="window.location.href='admin-users.html'" title="Quản lý người dùng">
-    </div>
-
-    <div class="content">
 
         <div class="user-table-container">
             <div class="table-responsive user-table">
@@ -270,7 +267,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script>const API_URL = 'https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/api';
+    <script>
+        const API_URL = 'https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/api';
         const token = localStorage.getItem('token');
         let currentUserId = null;
 
@@ -312,46 +310,46 @@
 
             if (!users || users.length === 0) {
                 tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center">Không có người dùng nào để hiển thị</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td colspan="7" class="text-center">Không có người dùng nào để hiển thị</td>
+                        </tr>
+                    `;
                 return;
             }
 
             users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.fullName}</td>
-                    <td>${user.username}</td>
-                    <td>${new Date(user.dateOfBirth).toLocaleDateString()}</td>
-                    <td>${user.contact}</td>
-                    <td>
-                        <span class="role-badge ${user.role === 'Admin' ? 'role-admin' : 'role-student'}">
-                            ${user.role === 'Admin' ? 'Quản trị viên' : 'Sinh viên'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
-                            Sửa
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteUser(${user.id})">
-                            Xóa
-                        </button>
-                    </td>
-                `;
+                        <td>${user.id}</td>
+                        <td>${user.fullName}</td>
+                        <td>${user.username}</td>
+                        <td>${new Date(user.dateOfBirth).toLocaleDateString()}</td>
+                        <td>${user.contact}</td>
+                        <td>
+                            <span class="role-badge ${user.role === 'Admin' ? 'role-admin' : 'role-student'}">
+                                ${user.role === 'Admin' ? 'Quản trị viên' : 'Sinh viên'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                Sửa
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteUser(${user.id})">
+                                Xóa
+                            </button>
+                        </td>
+                    `;
                 tableBody.appendChild(row);
             });
         }
 
         // Tìm kiếm người dùng
-        document.getElementById('search-button').addEventListener('click', function() {
+        document.getElementById('search-button').addEventListener('click', function () {
             const searchInput = document.getElementById('search-input');
             loadUsers(searchInput.value.trim());
         });
 
-        document.getElementById('search-input').addEventListener('keypress', function(e) {
+        document.getElementById('search-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 loadUsers(this.value.trim());
             }
@@ -397,7 +395,7 @@
             document.getElementById('overlay').style.display = 'block';
 
             // Thêm event listener cho nút xác nhận xóa
-            document.getElementById('confirm-delete-btn').onclick = function() {
+            document.getElementById('confirm-delete-btn').onclick = function () {
                 deleteUser(userId);
             };
         }
@@ -431,7 +429,7 @@
         }
 
         // Lưu người dùng (thêm mới hoặc cập nhật)
-        document.getElementById('user-form').addEventListener('submit', async function(e) {
+        document.getElementById('user-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const userData = {
@@ -501,7 +499,7 @@
         }
 
         // Click bên ngoài để đóng dropdown menu
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const userAvatar = document.querySelector('.user-avatar');
             const menuDropdown = document.getElementById('menu-dropdown');
 
@@ -511,8 +509,9 @@
         });
 
         // Tải danh sách người dùng khi trang được load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadUsers();
-        });</script>
+        });
+    </script>
 </body>
 </html>
