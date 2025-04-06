@@ -14,7 +14,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "Welcome.html",
-      "applicationUrl": "http://localhost:5251",
+      "applicationUrl": "https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -24,7 +24,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "Welcome.html",
-      "applicationUrl": "https://localhost:7196;http://localhost:5251",
+      "applicationUrl": "https://universityforum-a3fnc9f9c2axfaef.canadacentral-01.azurewebsites.net/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
