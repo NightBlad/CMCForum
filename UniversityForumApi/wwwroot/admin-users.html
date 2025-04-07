@@ -547,43 +547,50 @@
             }
         }
 
-        // Update the submit event listener to validate passwords
+        // Update the submit event listener to validate passwords and handle them securely
         document.getElementById('user-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const password = document.getElementById('password').value;
+            const password = document.getElementById('password').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+            const confirmPasswordHelp = document.getElementById('confirmPasswordHelp');
 
             // For new users, validate password confirmation
             if (!currentUserId) {
-                const confirmPassword = document.getElementById('confirmPassword').value;
+                if (!password) {
+                    confirmPasswordHelp.textContent = 'Mật khẩu không được để trống';
+                    return;
+                }
                 if (password !== confirmPassword) {
-                    document.getElementById('confirmPasswordHelp').textContent = 'Mật khẩu không khớp';
+                    confirmPasswordHelp.textContent = 'Mật khẩu không khớp';
                     return;
                 }
             }
 
+            // Build the basic user data object
             const userData = {
-                fullName: document.getElementById('fullName').value,
-                username: document.getElementById('username').value,
+                fullName: document.getElementById('fullName').value.trim(),
+                username: document.getElementById('username').value.trim(),
                 dateOfBirth: document.getElementById('dateOfBirth').value,
-                contact: document.getElementById('contact').value,
+                contact: document.getElementById('contact').value.trim(),
                 role: document.getElementById('role').value
             };
 
-            // Include password only if it is provided
-            if (password) {
+            // Include password only if it is provided for existing users
+            // For new users, password is required
+            if (password || !currentUserId) {
                 userData.password = password;
             }
 
             try {
                 if (currentUserId) {
-                    // Cập nhật người dùng
+                    // Update existing user
                     await axios.put(`${API_URL}/Admin/users/${currentUserId}`, userData, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     alert('Cập nhật thông tin người dùng thành công');
                 } else {
-                    // Thêm người dùng mới
+                    // Create new user
                     await axios.post(`${API_URL}/Admin/users`, userData, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
@@ -594,7 +601,22 @@
                 loadUsers();
             } catch (error) {
                 console.error('Error saving user:', error);
-                alert(error.response?.data || 'Đã xảy ra lỗi khi lưu thông tin người dùng');
+                // Extract error message from response
+                let errorMessage = 'Đã xảy ra lỗi khi lưu thông tin người dùng';
+
+                if (error.response) {
+                    // Try to get a meaningful error message
+                    if (typeof error.response.data === 'string') {
+                        errorMessage = error.response.data;
+                    } else if (error.response.data && error.response.data.message) {
+                        errorMessage = error.response.data.message;
+                    } else if (error.response.data && typeof error.response.data === 'object') {
+                        // Convert object to string for better readability
+                        errorMessage = JSON.stringify(error.response.data);
+                    }
+                }
+
+                alert(errorMessage);
             }
         });
 
