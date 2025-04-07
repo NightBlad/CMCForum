@@ -306,6 +306,120 @@
             margin-top: 10px;
             border-radius: 4px;
         }
+        /* Add these responsive styles to your existing CSS section */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* Mobile sidebar at bottom */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                width: 100%;
+                height: 60px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 5px;
+                z-index: 1010;
+                box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            }
+
+                .sidebar img {
+                    width: 30px;
+                    margin: 0;
+                }
+
+            .content {
+                margin-left: 0;
+                margin-bottom: 70px; /* Space for bottom sidebar */
+                padding: 15px;
+            }
+
+            /* Better spacing between sections */
+            h2, h3 {
+                margin-bottom: 15px;
+            }
+
+            /* Filter section responsiveness */
+            .filter-section {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+                .filter-section select {
+                    width: 100%;
+                    margin-top: 5px;
+                }
+
+            /* Make buttons full width on mobile */
+            .mb-3 .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            /* Post content responsiveness */
+            .post-header {
+                flex-wrap: wrap;
+            }
+
+            .post-actions {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+                .post-actions button {
+                    font-size: 13px;
+                }
+
+            /* Media container responsiveness */
+            .media-container {
+                max-width: 100%;
+            }
+
+            /* Form and popup adjustments */
+            .popup {
+                width: 90%;
+                left: 5%;
+                top: 50%;
+                transform: translateY(-50%);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .notification-popup {
+                width: 90%;
+                left: 5%;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+
+            /* Image zoom improvements */
+            .image-zoom-popup {
+                width: 95%;
+            }
+
+            /* User menu positioning */
+            .user-menu {
+                top: 5px;
+                right: 5px;
+            }
+
+            /* Improve dropdown menus for touch */
+            .menu-dropdown, .post-menu {
+                min-width: 120px;
+            }
+
+                .menu-item, .post-menu button {
+                    padding: 12px 15px;
+                    font-size: 16px;
+                }
+        }
     </style>
 </head>
 <body>
@@ -472,63 +586,63 @@
                     const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
 
                     postElement.innerHTML = `
-                                    <div class="post-header">
-                                        <img src="/HinhAnh/avatar.jpg" alt="Avatar">
-                                        <div>
-                                            <div class="author">${post.author || 'Unknown'}</div>
-                                            <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
-                                        </div>
-                                        <div class="post-settings ms-auto">
-                                            <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
-                                            <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
-                                                <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
-                                                <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
-                                                <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
-                                                    ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                            <div class="post-header">
+                                                <img src="/HinhAnh/avatar.jpg" alt="Avatar">
+                                                <div>
+                                                    <div class="author">${post.author || 'Unknown'}</div>
+                                                    <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
+                                                </div>
+                                                <div class="post-settings ms-auto">
+                                                    <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
+                                                    <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
+                                                        <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
+                                                        <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                                                        <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                                            ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="post-content">
-                                        <h6>${post.title || ''}</h6>
-                                        <p>${post.content || ''}</p>
-                                        ${post.mediaUrl ? `
-                                            <div class="media-container">
-                                                ${isVideo ?
+                                            <div class="post-content">
+                                                <h6>${post.title || ''}</h6>
+                                                <p>${post.content || ''}</p>
+                                                ${post.mediaUrl ? `
+                                                    <div class="media-container">
+                                                        ${isVideo ?
                                 `<video src="${post.mediaUrl}" controls></video>` :
                                 `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
-                                            </div>` : ''}
-                                    </div>
+                                                    </div>` : ''}
+                                            </div>
 
-                                    <div class="post-actions">
-                                        <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
-                                            ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
-                                        </button>
-                                        <button onclick="openCommentBox(${post.id}, ${comments.length})">
-                                            Bình luận (${comments.length})
-                                        </button>
-                                    </div>
+                                            <div class="post-actions">
+                                                <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
+                                                    ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
+                                                </button>
+                                                <button onclick="openCommentBox(${post.id}, ${comments.length})">
+                                                    Bình luận (${comments.length})
+                                                </button>
+                                            </div>
 
-                                    <!-- Form nhập comment (ẩn mặc định) -->
-                                    <div class="comment-form mt-3" id="comment-form-${post.id}">
-                                        <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
-                                        <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
-                                    </div>
+                                            <!-- Form nhập comment (ẩn mặc định) -->
+                                            <div class="comment-form mt-3" id="comment-form-${post.id}">
+                                                <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
+                                                <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
+                                            </div>
 
-                                    <!-- Danh sách comment (ẩn mặc định) -->
-                                    <div class="comment-list mt-3" id="comments-container-${post.id}">
-                                        ${comments.length > 0
+                                            <!-- Danh sách comment (ẩn mặc định) -->
+                                            <div class="comment-list mt-3" id="comments-container-${post.id}">
+                                                ${comments.length > 0
                             ? comments.map(comment => `
-                                                <div class="comment-item">
-                                                    <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
-                                                    <br>
-                                                    <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
-                                                </div>
-                                            `).join('')
+                                                        <div class="comment-item">
+                                                            <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
+                                                            <br>
+                                                            <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
+                                                        </div>
+                                                    `).join('')
                             : '<p>Chưa có bình luận nào.</p>'
                         }
-                                    </div>
-                                `;
+                                            </div>
+                                        `;
                     hiddenPostsContainer.appendChild(postElement);
                 });
             }
@@ -551,64 +665,64 @@
                     const isVideo = post.mediaUrl && ['.mp4', '.mov'].some(ext => post.mediaUrl.toLowerCase().endsWith(ext));
 
                     postElement.innerHTML = `
-                                        <div class="post-header">
-                                            <img src="/HinhAnh/avatar.jpg" alt="Avatar">
-                                            <div>
-                                                <div class="author">${post.author || 'Unknown'}</div>
-                                                <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
-                                            </div>
-                                            ${post.isAuthor ? `
-                                            <div class="post-settings ms-auto">
-                                                <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
-                                                <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
-                                                    <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
-                                                    <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
-                                                    <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
-                                                        ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                                <div class="post-header">
+                                                    <img src="/HinhAnh/avatar.jpg" alt="Avatar">
+                                                    <div>
+                                                        <div class="author">${post.author || 'Unknown'}</div>
+                                                        <div class="time">${post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown'}</div>
+                                                    </div>
+                                                    ${post.isAuthor ? `
+                                                    <div class="post-settings ms-auto">
+                                                        <button style="font-size:20px" class="btn btn-sm btn-link" onclick="togglePostMenu(${post.id})">⋮</button>
+                                                        <div class="post-menu" id="post-menu-${post.id}" style="display: none;">
+                                                            <button class="btn btn-sm btn-light" onclick="editPost(${post.id})">Sửa</button>
+                                                            <button class="btn btn-sm btn-light" onclick="deletePost(${post.id})">Xóa</button>
+                                                            <button class="btn btn-sm btn-light" onclick="toggleHidePost(${post.id}, ${post.isHidden})">
+                                                                ${post.isHidden ? 'Hiển thị lại' : 'Ẩn bài viết'}
+                                                        </div>
+                                                    </div>` : ''}
                                                 </div>
-                                            </div>` : ''}
-                                        </div>
 
-                                        <div class="post-content">
-                                            <h6>${post.title || ''}</h6>
-                                            <p>${post.content || ''}</p>
-                                            ${post.mediaUrl ? `
-                                                <div class="media-container">
-                                                    ${isVideo ?
+                                                <div class="post-content">
+                                                    <h6>${post.title || ''}</h6>
+                                                    <p>${post.content || ''}</p>
+                                                    ${post.mediaUrl ? `
+                                                        <div class="media-container">
+                                                            ${isVideo ?
                                 `<video src="${post.mediaUrl}" controls></video>` :
                                 `<img src="${post.mediaUrl}" alt="Post Media" onclick="openImageZoomPopup('${post.mediaUrl}')">`}
-                                                </div>` : ''}
-                                        </div>
+                                                        </div>` : ''}
+                                                </div>
 
-                                        <div class="post-actions">
-                                            <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
-                                                ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
-                                            </button>
-                                            <button onclick="openCommentBox(${post.id}, ${comments.length})">
-                                                Bình luận (${comments.length})
-                                            </button>
-                                        </div>
+                                                <div class="post-actions">
+                                                    <button class="${post.userLiked ? 'liked' : ''}" onclick="likePost(${post.id}, this)">
+                                                        ${post.userLiked ? 'Bỏ thích' : 'Thích'} (${post.likeCount || 0})
+                                                    </button>
+                                                    <button onclick="openCommentBox(${post.id}, ${comments.length})">
+                                                        Bình luận (${comments.length})
+                                                    </button>
+                                                </div>
 
-                                        <!-- Form nhập comment (ẩn mặc định) -->
-                                        <div class="comment-form mt-3" id="comment-form-${post.id}">
-                                            <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
-                                            <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
-                                        </div>
+                                                <!-- Form nhập comment (ẩn mặc định) -->
+                                                <div class="comment-form mt-3" id="comment-form-${post.id}">
+                                                    <input type="text" class="form-control mb-2" id="comment-input-${post.id}" placeholder="Viết bình luận...">
+                                                    <button class="btn btn-sm btn-primary" onclick="addComment(${post.id})">Gửi</button>
+                                                </div>
 
-                                        <!-- Danh sách comment (ẩn mặc định) -->
-                                        <div class="comment-list mt-3" id="comments-container-${post.id}">
-                                            ${comments.length > 0
+                                                <!-- Danh sách comment (ẩn mặc định) -->
+                                                <div class="comment-list mt-3" id="comments-container-${post.id}">
+                                                    ${comments.length > 0
                             ? comments.map(comment => `
-                                                    <div class="comment-item">
-                                                        <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
-                                                        <br>
-                                                        <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
-                                                    </div>
-                                                `).join('')
+                                                            <div class="comment-item">
+                                                                <strong>${comment.author || 'Unknown'}</strong>: ${comment.content || ''}
+                                                                <br>
+                                                                <small>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : 'Unknown'}</small>
+                                                            </div>
+                                                        `).join('')
                             : '<p>Chưa có bình luận nào.</p>'
                         }
-                                        </div>
-                                    `;
+                                                </div>
+                                            `;
                     container.appendChild(postElement);
                 });
             }
@@ -668,6 +782,7 @@
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     alert(response.data);
+                    loadHiddenPosts();
                     loadPosts();
                 } catch (error) {
                     console.error('Error hiding/unhiding post:', error);
@@ -814,9 +929,9 @@
                             item.className = 'notification-item';
                             item.style.cursor = 'pointer';
                             item.innerHTML = `
-                                                        <p>${notification.content}</p>
-                                                        <small>${new Date(notification.createdAt).toLocaleString()}</small>
-                                                    `;
+                                                                <p>${notification.content}</p>
+                                                                <small>${new Date(notification.createdAt).toLocaleString()}</small>
+                                                            `;
                             if (notification.postId) {
                                 item.addEventListener('click', () => {
                                     window.location.href = `post-detail.html?id=${notification.postId}`;
@@ -932,8 +1047,49 @@
                     window.location.href = 'homepage.html';
                 }
             }
+
+            // Add this function to your existing script section, just before loadPosts calls
+            function setupMobileEnhancements() {
+                // Improve touch area for small buttons on mobile
+                if (window.innerWidth <= 768) {
+                    // Close menu dropdowns when tapping elsewhere
+                    document.addEventListener('touchstart', function (e) {
+                        const menus = document.querySelectorAll('.post-menu, .menu-dropdown');
+                        let clickedOnMenu = false;
+
+                        menus.forEach(menu => {
+                            if (menu.contains(e.target) ||
+                                e.target.classList.contains('btn-link') ||
+                                e.target.closest('.user-avatar')) {
+                                clickedOnMenu = true;
+                            }
+                        });
+
+                        if (!clickedOnMenu) {
+                            menus.forEach(menu => menu.style.display = 'none');
+                        }
+                    });
+
+                    // Add active state visual feedback for mobile taps
+                    const buttons = document.querySelectorAll('button');
+                    buttons.forEach(button => {
+                        button.addEventListener('touchstart', function () {
+                            this.style.opacity = '0.7';
+                        });
+                        button.addEventListener('touchend', function () {
+                            this.style.opacity = '1';
+                        });
+                    });
+                }
+            }
+
+            // Add these event listeners right after the existing loadPosts() calls at the end of your script
+            window.addEventListener('DOMContentLoaded', setupMobileEnhancements);
+            window.addEventListener('resize', setupMobileEnhancements);
+
             // Tải bài viết khi vào trang profile
             loadPosts('newest');
+            loadHiddenPosts();
             loadUserInfo();
         </script>
 </body>

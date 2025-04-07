@@ -74,6 +74,50 @@
                 opacity: 1;
             }
         }
+
+        /* Add these responsive styles */
+        @media (max-width: 768px) {
+            .welcome-container {
+                width: 90%;
+                padding: 1.8rem;
+            }
+
+                .welcome-container h1 {
+                    font-size: 2rem;
+                    margin-bottom: 1.5rem;
+                }
+
+                .welcome-container .btn {
+                    display: block;
+                    width: 100%;
+                    margin: 0.8rem auto;
+                    padding: 0.7rem 1.2rem;
+                }
+        }
+
+        /* Additional improvements for very small screens */
+        @media (max-width: 350px) {
+            .welcome-container {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+                .welcome-container h1 {
+                    font-size: 1.6rem;
+                    margin-bottom: 1.2rem;
+                }
+
+                .welcome-container .btn {
+                    padding: 0.6rem 1rem;
+                    font-size: 1rem;
+                }
+        }
+
+        /* Add touch feedback for buttons */
+        .btn:active {
+            transform: scale(0.98) !important;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -82,6 +126,31 @@
         <button class="btn btn-success" onclick="window.location.href='register.html'">Đăng ký tài khoản</button>
         <button class="btn btn-primary" onclick="window.location.href='login.html'">Đăng nhập tài khoản</button>
     </div>
+
+    <script>
+        // Add mobile-specific enhancements
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if we're on a mobile device
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                // Add touch feedback animations
+                const buttons = document.querySelectorAll('.btn');
+
+                buttons.forEach(button => {
+                    // Add touch feedback that's stronger than the :active state
+                    button.addEventListener('touchstart', function () {
+                        this.style.transform = 'scale(0.97)';
+                        this.style.opacity = '0.9';
+                    });
+
+                    button.addEventListener('touchend', function () {
+                        this.style.transform = '';
+                        this.style.opacity = '';
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-

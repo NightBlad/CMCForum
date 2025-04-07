@@ -157,6 +157,113 @@
             .menu-item:hover {
                 background-color: #f1f1f1;
             }
+        /* Add these responsive styles to your existing CSS section */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* Mobile sidebar at bottom */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                width: 100%;
+                height: 60px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 5px;
+                z-index: 1010;
+                box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            }
+
+                .sidebar img {
+                    width: 30px;
+                    margin: 0;
+                }
+
+            .content {
+                margin-left: 0;
+                margin-bottom: 70px; /* Space for bottom sidebar */
+                padding: 15px;
+            }
+
+            /* Header section adjustments */
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                padding-top: 20px;
+            }
+
+                .header-section h2 {
+                    margin-bottom: 15px;
+                }
+
+                .header-section .d-flex {
+                    flex-direction: column;
+                    width: 100%;
+                }
+
+            /* Search bar adjustments */
+            .search-bar {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-right: 0 !important;
+            }
+
+            #search-input {
+                width: calc(100% - 50px);
+            }
+
+            /* Add user button */
+            .header-section .btn-primary {
+                width: 100%;
+            }
+
+            /* Table responsiveness enhancements */
+            .user-table {
+                overflow-x: auto;
+                padding: 0;
+            }
+
+            .table th, .table td {
+                padding: 10px 5px;
+                font-size: 0.9rem;
+            }
+
+            /* Action buttons in table */
+            .table .btn {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+            }
+
+            /* Form popup adjustments */
+            .user-popup, .delete-confirmation {
+                width: 90%;
+                left: 5%;
+                transform: translateX(0) translateY(-50%);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            /* User menu positioning */
+            .user-menu {
+                top: 5px;
+                right: 5px;
+            }
+
+            .menu-dropdown {
+                min-width: 120px;
+            }
+
+            .menu-item {
+                padding: 12px 15px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -317,35 +424,35 @@
 
             if (!users || users.length === 0) {
                 tableBody.innerHTML = `
-                            <tr>
-                                <td colspan="7" class="text-center">Không có người dùng nào để hiển thị</td>
-                            </tr>
-                        `;
+                                <tr>
+                                    <td colspan="7" class="text-center">Không có người dùng nào để hiển thị</td>
+                                </tr>
+                            `;
                 return;
             }
 
             users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                            <td>${user.id}</td>
-                            <td>${user.fullName}</td>
-                            <td>${user.username}</td>
-                            <td>${new Date(user.dateOfBirth).toLocaleDateString()}</td>
-                            <td>${user.contact}</td>
-                            <td>
-                                <span class="role-badge ${user.role === 'Admin' ? 'role-admin' : 'role-student'}">
-                                    ${user.role === 'Admin' ? 'Quản trị viên' : 'Sinh viên'}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
-                                    Sửa
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteUser(${user.id})">
-                                    Xóa
-                                </button>
-                            </td>
-                        `;
+                                <td>${user.id}</td>
+                                <td>${user.fullName}</td>
+                                <td>${user.username}</td>
+                                <td>${new Date(user.dateOfBirth).toLocaleDateString()}</td>
+                                <td>${user.contact}</td>
+                                <td>
+                                    <span class="role-badge ${user.role === 'Admin' ? 'role-admin' : 'role-student'}">
+                                        ${user.role === 'Admin' ? 'Quản trị viên' : 'Sinh viên'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                        Sửa
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteUser(${user.id})">
+                                        Xóa
+                                    </button>
+                                </td>
+                            `;
                 tableBody.appendChild(row);
             });
         }
@@ -530,6 +637,40 @@
                 menuDropdown.style.display = 'none';
             }
         });
+
+        // Add mobile enhancements
+        function setupMobileEnhancements() {
+            // Improve touch area for small buttons on mobile
+            if (window.innerWidth <= 768) {
+                // Close menu dropdowns when tapping elsewhere
+                document.addEventListener('touchstart', function (e) {
+                    const menuDropdown = document.getElementById('menu-dropdown');
+                    const userAvatar = document.querySelector('.user-avatar');
+
+                    if (!userAvatar.contains(e.target) && menuDropdown.style.display === 'block') {
+                        menuDropdown.style.display = 'none';
+                    }
+                });
+
+                // Add active state visual feedback for mobile taps
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function () {
+                        this.style.opacity = '0.7';
+                    });
+                    button.addEventListener('touchend', function () {
+                        this.style.opacity = '1';
+                    });
+                });
+            }
+        }
+
+        // Call this function after page loads
+        window.addEventListener('DOMContentLoaded', function () {
+            loadUsers();
+            setupMobileEnhancements();
+        });
+        window.addEventListener('resize', setupMobileEnhancements);
 
         // Tải danh sách người dùng khi trang được load
         document.addEventListener('DOMContentLoaded', function () {

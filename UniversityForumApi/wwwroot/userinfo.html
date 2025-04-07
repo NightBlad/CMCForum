@@ -170,6 +170,146 @@
             .menu-item:hover {
                 background-color: #f1f1f1;
             }
+        /* Add these responsive styles to your existing CSS section */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* Mobile sidebar at bottom */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                width: 100%;
+                height: 60px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 5px;
+                z-index: 1010;
+                box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            }
+
+                .sidebar img {
+                    width: 30px;
+                    margin: 0;
+                }
+
+            .content {
+                margin-left: 0;
+                margin-bottom: 70px; /* Space for bottom sidebar */
+                padding: 15px;
+            }
+
+            /* User info card adjustments */
+            .user-info {
+                padding: 15px;
+                max-width: 100%;
+            }
+
+                .user-info h3 {
+                    font-size: 20px;
+                    margin-bottom: 15px;
+                }
+
+                /* Adjust information layout */
+                .user-info p {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid #f0f0f0;
+                    padding-bottom: 10px;
+                }
+
+                    .user-info p:last-child {
+                        border-bottom: none;
+                    }
+
+                    .user-info p strong {
+                        width: 100%;
+                        margin-bottom: 5px;
+                        color: #555;
+                    }
+
+                    .user-info p span {
+                        width: 100%;
+                        text-align: left;
+                        font-size: 15px;
+                    }
+
+                /* Form improvements */
+                .user-info form .form-label {
+                    font-size: 14px;
+                }
+
+                .user-info form .form-control {
+                    font-size: 15px;
+                    margin-bottom: 10px;
+                }
+
+                /* Button adjustments */
+                .user-info .btn {
+                    width: 100%;
+                    margin-bottom: 8px;
+                }
+
+                .user-info form .btn {
+                    padding: 8px 12px;
+                }
+
+            /* Popup adjustments */
+            .popup {
+                width: 90%;
+                left: 5%;
+                top: 50%;
+                transform: translateY(-50%);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .notification-popup {
+                width: 90%;
+                left: 5%;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+
+            /* User menu positioning */
+            .user-menu {
+                top: 5px;
+                right: 5px;
+            }
+
+            .menu-dropdown {
+                min-width: 120px;
+            }
+
+            .menu-item {
+                padding: 12px 15px;
+                font-size: 16px;
+            }
+
+            /* Provide more visual space between sections */
+            .mt-4 {
+                margin-top: 2rem !important;
+            }
+        }
+
+        /* Extra adjustments for tiny screens */
+        @media (max-width: 350px) {
+            .user-info h3 {
+                font-size: 18px;
+            }
+
+            .user-info form .btn {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -582,6 +722,51 @@
                 window.location.href = 'homepage.html';
             }
         }
+        // Add this function to enhance mobile experience
+        function setupMobileEnhancements() {
+            // Check if we're on a mobile device by screen width
+            if (window.innerWidth <= 768) {
+                // Add active state visual feedback for buttons
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function () {
+                        this.style.opacity = '0.7';
+                    });
+
+                    button.addEventListener('touchend', function () {
+                        this.style.opacity = '1';
+                    });
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('touchstart', function (e) {
+                    const menuDropdown = document.getElementById('menu-dropdown');
+                    const userAvatar = document.querySelector('.user-avatar');
+
+                    if (!userAvatar.contains(e.target) && menuDropdown.style.display === 'block') {
+                        menuDropdown.style.display = 'none';
+                    }
+                });
+
+                // Improve form field focus for mobile
+                const formInputs = document.querySelectorAll('input, textarea');
+                formInputs.forEach(input => {
+                    input.addEventListener('focus', function () {
+                        this.style.backgroundColor = 'rgba(255, 255, 255, 0.97)';
+                        this.style.boxShadow = '0 0 0 3px rgba(0, 123, 255, 0.1)';
+                    });
+
+                    input.addEventListener('blur', function () {
+                        this.style.backgroundColor = '';
+                        this.style.boxShadow = '';
+                    });
+                });
+            }
+        }
+
+        // Call this function after the page loads
+        document.addEventListener('DOMContentLoaded', setupMobileEnhancements);
+        window.addEventListener('resize', setupMobileEnhancements);
 
         // Tải thông tin cá nhân khi trang được mở
         loadUserInfo();

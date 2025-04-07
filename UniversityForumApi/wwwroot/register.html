@@ -78,6 +78,70 @@
                 opacity: 1;
             }
         }
+        /* Add these responsive styles to your existing CSS in register.html */
+        @media (max-width: 768px) {
+            .register-container {
+                width: 90%;
+                padding: 1.5rem;
+            }
+
+                .register-container h2 {
+                    font-size: 1.5rem;
+                }
+
+                .register-container .btn {
+                    font-size: 1rem;
+                    padding: 0.6rem;
+                }
+
+            .back-button {
+                top: 10px;
+                left: 10px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .form-label {
+                font-size: 0.95rem;
+            }
+
+            .form-control {
+                font-size: 0.95rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            small.form-text {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Additional improvements for very small screens */
+        @media (max-width: 350px) {
+            .register-container {
+                width: 95%;
+                padding: 1rem;
+            }
+
+                .register-container h2 {
+                    font-size: 1.3rem;
+                    margin-bottom: 1rem;
+                }
+
+            .form-label {
+                font-size: 0.9rem;
+            }
+
+            .register-container .form-control {
+                padding: 0.4rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Add touch feedback for buttons */
+        .btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -177,6 +241,43 @@
                 return false;
             }
         }
+        // Add this to your existing script section
+        document.addEventListener('DOMContentLoaded', function () {
+            // Improve form validation feedback for mobile
+            const inputs = document.querySelectorAll('input');
+
+            inputs.forEach(input => {
+                // Clear error messages when user starts typing again
+                input.addEventListener('input', function () {
+                    if (this.id === 'username') {
+                        document.getElementById('usernameHelp').textContent = '';
+                    }
+                    if (this.id === 'password' || this.id === 'confirmPassword') {
+                        document.getElementById('passwordHelp').textContent = '';
+                    }
+                });
+
+                // Add visual feedback on mobile touch
+                input.addEventListener('touchstart', function () {
+                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                });
+
+                input.addEventListener('touchend', function () {
+                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                });
+            });
+
+            // Add better scroll behavior when validation errors occur
+            document.getElementById('register-form').addEventListener('submit', function () {
+                // This will run after the form's existing submit handler
+                setTimeout(() => {
+                    const errorMessage = document.querySelector('.form-text[style*="red"]');
+                    if (errorMessage) {
+                        errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            });
+        });
     </script>
 </body>
 </html>

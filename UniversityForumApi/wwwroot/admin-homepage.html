@@ -363,6 +363,130 @@
                 .post-menu button:hover {
                     background-color: #f8f9fa;
                 }
+        /* Add these responsive styles to your existing CSS section */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* Mobile sidebar at bottom */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                width: 100%;
+                height: 60px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 5px;
+                z-index: 1010;
+                box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            }
+
+                .sidebar img {
+                    width: 30px;
+                    margin: 0;
+                }
+
+            .content {
+                margin-left: 0;
+                margin-bottom: 70px; /* Space for bottom sidebar */
+                padding: 15px;
+            }
+
+            /* Responsive header and search */
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .search-bar {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            #search-input {
+                width: calc(100% - 50px);
+            }
+
+            /* Filter responsiveness */
+            .filter-section {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #post-filter {
+                width: 100%;
+                margin-top: 5px;
+            }
+
+            /* Popup responsiveness */
+            .popup {
+                width: 90%;
+                left: 5%;
+                top: 50%;
+                transform: translateY(-50%);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .notification-popup {
+                width: 90%;
+                left: 5%;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+
+            /* User menu positioning */
+            .user-menu {
+                top: 5px;
+                right: 5px;
+            }
+
+            /* Post content responsiveness */
+            .post-header {
+                flex-wrap: wrap;
+            }
+
+            .post-actions {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+                .post-actions button {
+                    font-size: 13px;
+                }
+
+            /* Media container responsiveness */
+            .media-container {
+                max-width: 100%;
+            }
+
+            /* Image zoom improvements */
+            .image-zoom-popup {
+                width: 95%;
+            }
+
+            /* Comment section improvements */
+            .comment-filter select {
+                width: 100%;
+                margin-top: 5px;
+            }
+
+            /* Improve dropdown menus for touch */
+            .menu-dropdown, .post-menu {
+                min-width: 120px;
+            }
+
+                .menu-item, .post-menu button {
+                    padding: 12px 15px;
+                    font-size: 16px;
+                }
+        }
     </style>
 </head>
 <body>
@@ -964,6 +1088,44 @@
             popup.style.display = 'none';
             overlay.style.display = 'none';
         }
+        // Add this to your existing script section
+        function setupMobileEnhancements() {
+            // Improve touch area for small buttons on mobile
+            if (window.innerWidth <= 768) {
+                // Close menu dropdowns when tapping elsewhere
+                document.addEventListener('touchstart', function (e) {
+                    const menus = document.querySelectorAll('.post-menu, .menu-dropdown');
+                    let clickedOnMenu = false;
+
+                    menus.forEach(menu => {
+                        if (menu.contains(e.target) ||
+                            e.target.classList.contains('btn-link') ||
+                            e.target.closest('.user-avatar')) {
+                            clickedOnMenu = true;
+                        }
+                    });
+
+                    if (!clickedOnMenu) {
+                        menus.forEach(menu => menu.style.display = 'none');
+                    }
+                });
+
+                // Add active state visual feedback for mobile taps
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function () {
+                        this.style.opacity = '0.7';
+                    });
+                    button.addEventListener('touchend', function () {
+                        this.style.opacity = '1';
+                    });
+                });
+            }
+        }
+
+        // Call this function after page loads
+        window.addEventListener('DOMContentLoaded', setupMobileEnhancements);
+        window.addEventListener('resize', setupMobileEnhancements);
 
         // Gọi hàm loadPosts ban đầu
         loadUserInfo();

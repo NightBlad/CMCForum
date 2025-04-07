@@ -270,6 +270,117 @@
                 width: 70px;
                 text-align: left;
             }
+        /* Add these responsive styles to your existing CSS section */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* Mobile sidebar at bottom */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                width: 100%;
+                height: 60px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                padding: 5px;
+                z-index: 1010;
+                box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            }
+
+                .sidebar img {
+                    width: 30px;
+                    margin: 0;
+                }
+
+            .content {
+                margin-left: 0;
+                margin-bottom: 70px; /* Space for bottom sidebar */
+                padding: 15px;
+            }
+
+            /* Improved header layout */
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            h2 {
+                margin-bottom: 15px;
+            }
+
+            /* Post card adjustments */
+            .post {
+                padding: 12px;
+            }
+
+            .post-header {
+                flex-wrap: wrap;
+            }
+
+            /* Improve approval buttons for touch */
+            .post-actions {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+                .post-actions button {
+                    flex: 1;
+                    padding: 10px 0;
+                    font-size: 14px;
+                }
+
+            /* Make media more responsive */
+            .post img,
+            .post video {
+                max-width: 100%;
+                height: auto;
+            }
+
+            /* User menu adjustments */
+            .user-menu {
+                top: 5px;
+                right: 5px;
+            }
+
+            .user-avatar img {
+                width: 35px;
+                height: 35px;
+            }
+
+            .menu-dropdown {
+                top: 45px;
+                width: 140px;
+            }
+
+            /* Enhance menu items for touch */
+            .menu-item {
+                padding: 12px 15px;
+                font-size: 15px;
+            }
+        }
+
+        /* Additional styles for very small screens */
+        @media (max-width: 350px) {
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .post h5 {
+                font-size: 1.1rem;
+            }
+
+            .post-actions button {
+                padding: 8px 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -316,23 +427,24 @@
                     const postElement = document.createElement('div');
                     postElement.className = 'post';
                     postElement.innerHTML = `
-                            <div class="post-header">
-                                <img src="${post.avatarUrl || '/HinhAnh/avatar.jpg'}" alt="Avatar">
-                                <div>
-                                    <strong>${post.author}</strong>
-                                    <small>${new Date(post.createdAt).toLocaleString()}</small>
-                                </div>
-                            </div>
-                            <h5>${post.title}</h5>
-                            <p>${post.content}</p>
-                            ${post.mediaUrl ? getMediaHtml(post.mediaUrl) : ''}
-                            <div class="post-actions">
-                                <button class="btn btn-sm btn-success" onclick="approvePost(${post.id})">Duyệt</button>
-                                <button class="btn btn-sm btn-danger" onclick="rejectPost(${post.id})">Từ chối</button>
-                            </div>
-                        `;
+                                    <div class="post-header">
+                                        <img src="${post.avatarUrl || '/HinhAnh/avatar.jpg'}" alt="Avatar">
+                                        <div>
+                                            <strong>${post.author}</strong>
+                                            <small>${new Date(post.createdAt).toLocaleString()}</small>
+                                        </div>
+                                    </div>
+                                    <h5>${post.title}</h5>
+                                    <p>${post.content}</p>
+                                    ${post.mediaUrl ? getMediaHtml(post.mediaUrl) : ''}
+                                    <div class="post-actions">
+                                        <button class="btn btn-sm btn-success" onclick="approvePost(${post.id})">Duyệt</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectPost(${post.id})">Từ chối</button>
+                                    </div>
+                                `;
                     container.appendChild(postElement);
                 });
+                setTimeout(setupMobileEnhancements, 500);
             } catch (error) {
                 console.error('Error loading pending posts:', error);
                 alert('Không thể tải danh sách bài viết chờ duyệt');
@@ -379,7 +491,44 @@
                 alert('Không thể từ chối bài viết');
             }
         }
+        // Add this function to your existing JavaScript
+        function setupMobileEnhancements() {
+            // Check if we're on a mobile device by screen width
+            if (window.innerWidth <= 768) {
+                // Add active state visual feedback for buttons
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function () {
+                        this.style.opacity = '0.7';
+                    });
 
+                    button.addEventListener('touchend', function () {
+                        this.style.opacity = '1';
+                    });
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('touchstart', function (e) {
+                    const menuDropdown = document.getElementById('menu-dropdown');
+                    const userAvatar = document.querySelector('.user-avatar');
+
+                    if (!userAvatar.contains(e.target) && menuDropdown.style.display === 'block') {
+                        menuDropdown.style.display = 'none';
+                    }
+                });
+
+                // Make image/video elements easier to interact with
+                const mediaElements = document.querySelectorAll('.post img, .post video');
+                mediaElements.forEach(media => {
+                    media.style.maxHeight = '300px';
+                });
+            }
+        }
+        // Also add window resize listener
+        window.addEventListener('resize', setupMobileEnhancements);
+
+        // Call at the end of your script
+        document.addEventListener('DOMContentLoaded', setupMobileEnhancements);
         // Tải bài viết khi vào trang
         loadPendingPosts();
     </script>
