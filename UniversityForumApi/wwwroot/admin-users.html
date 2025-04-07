@@ -567,9 +567,13 @@
                 username: document.getElementById('username').value,
                 dateOfBirth: document.getElementById('dateOfBirth').value,
                 contact: document.getElementById('contact').value,
-                role: document.getElementById('role').value,
-                password: password
+                role: document.getElementById('role').value
             };
+
+            // Include password only if it is provided
+            if (password) {
+                userData.password = password;
+            }
 
             try {
                 if (currentUserId) {
@@ -593,6 +597,7 @@
                 alert(error.response?.data || 'Đã xảy ra lỗi khi lưu thông tin người dùng');
             }
         });
+
 
         // Chỉnh sửa người dùng
         function editUser(userId) {
