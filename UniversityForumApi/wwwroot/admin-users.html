@@ -608,6 +608,10 @@
                     // Try to get a meaningful error message
                     if (typeof error.response.data === 'string') {
                         errorMessage = error.response.data;
+                    } else if (error.response.data && error.response.data.errors) {
+                        // Extract validation errors
+                        const errors = error.response.data.errors;
+                        errorMessage = Object.values(errors).flat().join(', ');
                     } else if (error.response.data && error.response.data.message) {
                         errorMessage = error.response.data.message;
                     } else if (error.response.data && typeof error.response.data === 'object') {
