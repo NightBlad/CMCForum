@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace UniversityForumApi.DTOs
 {
     public class UserProfileDto
@@ -14,6 +16,8 @@ namespace UniversityForumApi.DTOs
     {
         public string FullName { get; set; }
         public DateTime DateOfBirth { get; set; }
+        [Required]
+        [Phone]
         public string Contact { get; set; }
     }
 }

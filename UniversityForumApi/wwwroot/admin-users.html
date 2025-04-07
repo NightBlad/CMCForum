@@ -583,7 +583,11 @@
                 const user = response.data;
                 document.getElementById('fullName').value = user.fullName;
                 document.getElementById('username').value = user.username;
-                document.getElementById('dateOfBirth').value = new Date(user.dateOfBirth).toISOString().split('T')[0];
+                document.getElementById('dateOfBirth').value = new Date(user.dateOfBirth).toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).split('/').reverse().join('-'); // Convert to YYYY-MM-DD format
                 document.getElementById('contact').value = user.contact;
                 document.getElementById('role').value = user.role;
                 document.getElementById('password').value = '';
@@ -593,6 +597,7 @@
                 closeUserForm();
             }
         }
+
 
         // Update the form submission to properly handle passwords
         document.getElementById('user-form').addEventListener('submit', async function (e) {

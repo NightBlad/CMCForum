@@ -352,7 +352,7 @@
                         <input type="date" class="form-control" id="edit-dob" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-contact" class="form-label">Email/Liên hệ</label>
+                        <label for="edit-contact" class="form-label">Liên hệ</label>
                         <input type="text" class="form-control" id="edit-contact" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
@@ -444,7 +444,7 @@
                 userInfoContainer.innerHTML = `
                             <p><strong>Tên:</strong> <span>${user.fullName || 'Chưa có thông tin'}</span></p>
                             <p><strong>Ngày sinh:</strong> <span>${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}</span></p>
-                            <p><strong>Email:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
+                            <p><strong>SDT:</strong> <span>${user.contact || 'Chưa có thông tin'}</span></p>
                             <p><strong>Vai trò:</strong> <span>${user.role || 'Chưa có thông tin'}</span></p>
                         `;
 
@@ -588,7 +588,11 @@
 
                 // Populate form with current data
                 document.getElementById('edit-fullname').value = currentUserData.fullName || '';
-                document.getElementById('edit-dob').value = currentUserData.dateOfBirth ? new Date(currentUserData.dateOfBirth).toISOString().split('T')[0] : '';
+                document.getElementById('edit-dob').value = currentUserData.dateOfBirth ? new Date(currentUserData.dateOfBirth).toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).split('/').reverse().join('-') : '';
                 document.getElementById('edit-contact').value = currentUserData.contact || '';
             }
         }
