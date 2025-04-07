@@ -23,7 +23,6 @@ namespace UniversityForumApi.DTOs
         [StringLength(50)]
         public string Username { get; set; }
 
-        [StringLength(100, MinimumLength = 6)]
-        public string Password { get; set; } // Optional for updates
+        public string? Password { get; set; } // Optional for updates
     }
 }

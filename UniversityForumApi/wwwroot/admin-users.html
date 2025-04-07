@@ -391,9 +391,10 @@
             window.location.href = 'login.html';
         }
 
-        // Tải danh sách người dùng
+        // Update the loadUsers function to show loading state
         async function loadUsers(search = '') {
             try {
+                showLoading();
                 const response = await axios.get(`${API_URL}/Admin/users`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -411,9 +412,11 @@
                 }
 
                 displayUsers(users);
+                hideLoading();
             } catch (error) {
                 console.error('Error loading users:', error);
                 alert('Đã xảy ra lỗi khi tải danh sách người dùng');
+                hideLoading();
             }
         }
 
@@ -469,7 +472,7 @@
             }
         });
 
-        // Update the openUserForm function to show/hide confirm password field
+        // Update the openUserForm function to correctly manage password requirements
         function openUserForm(mode, userId = null) {
             const popup = document.getElementById('user-popup');
             const titleElement = document.getElementById('user-form-title');
@@ -484,21 +487,65 @@
 
             if (mode === 'create') {
                 titleElement.textContent = 'Thêm người dùng mới';
-                passwordField.required = true;
+                passwordField.required = true; // Password required for new users
                 passwordHelp.style.display = 'none';
-                confirmPasswordContainer.style.display = 'block'; // Show confirm password for new users
+                confirmPasswordContainer.style.display = 'block';
             } else if (mode === 'edit') {
                 titleElement.textContent = 'Cập nhật thông tin người dùng';
-                passwordField.required = false;
+                passwordField.required = false; // Password optional for updates
                 passwordHelp.style.display = 'block';
-                confirmPasswordContainer.style.display = 'none'; // Hide for edit mode
+                confirmPasswordContainer.style.display = 'none';
+
+                // Show confirm password field when password is entered
+                passwordField.addEventListener('input', function () {
+                    confirmPasswordContainer.style.display = this.value ? 'block' : 'none';
+                });
+
                 loadUserDetails(userId);
             }
 
             popup.style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
         }
+        // Add these functions to show/hide a loading spinner
+        function showLoading() {
+            // Create loading overlay if it doesn't exist
+            if (!document.getElementById('loading-overlay')) {
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'loading-overlay';
+                loadingOverlay.style.position = 'fixed';
+                loadingOverlay.style.top = '0';
+                loadingOverlay.style.left = '0';
+                loadingOverlay.style.width = '100%';
+                loadingOverlay.style.height = '100%';
+                loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.justifyContent = 'center';
+                loadingOverlay.style.alignItems = 'center';
+                loadingOverlay.style.zIndex = '2000';
 
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner-border text-light';
+                spinner.setAttribute('role', 'status');
+
+                const srOnly = document.createElement('span');
+                srOnly.className = 'visually-hidden';
+                srOnly.textContent = 'Loading...';
+
+                spinner.appendChild(srOnly);
+                loadingOverlay.appendChild(spinner);
+                document.body.appendChild(loadingOverlay);
+            } else {
+                document.getElementById('loading-overlay').style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }
         // Đóng form người dùng
         function closeUserForm() {
             document.getElementById('user-popup').style.display = 'none';
@@ -547,7 +594,7 @@
             }
         }
 
-        // Update the submit event listener to validate passwords and handle them securely
+        // Update the form submission to properly handle passwords
         document.getElementById('user-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -555,19 +602,23 @@
             const confirmPassword = document.getElementById('confirmPassword').value.trim();
             const confirmPasswordHelp = document.getElementById('confirmPasswordHelp');
 
-            // For new users, validate password confirmation
+            // For new users, require password
             if (!currentUserId) {
                 if (!password) {
                     confirmPasswordHelp.textContent = 'Mật khẩu không được để trống';
                     return;
                 }
+            }
+
+            // If password is provided (for both new and existing users), check confirmation
+            if (password) {
                 if (password !== confirmPassword) {
                     confirmPasswordHelp.textContent = 'Mật khẩu không khớp';
                     return;
                 }
             }
 
-            // Build the basic user data object
+            // Build the user data object
             const userData = {
                 fullName: document.getElementById('fullName').value.trim(),
                 username: document.getElementById('username').value.trim(),
@@ -576,47 +627,45 @@
                 role: document.getElementById('role').value
             };
 
-            // Include password only if it is provided for existing users
-            // For new users, password is required
-            if (password || !currentUserId) {
+            // Only include password if it's provided
+            if (password) {
                 userData.password = password;
             }
 
             try {
+                // Show loading indicator
+                showLoading();
+
                 if (currentUserId) {
                     // Update existing user
                     await axios.put(`${API_URL}/Admin/users/${currentUserId}`, userData, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+                    hideLoading();
                     alert('Cập nhật thông tin người dùng thành công');
                 } else {
                     // Create new user
                     await axios.post(`${API_URL}/Admin/users`, userData, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+                    hideLoading();
                     alert('Thêm người dùng mới thành công');
                 }
 
                 closeUserForm();
                 loadUsers();
             } catch (error) {
+                hideLoading();
                 console.error('Error saving user:', error);
-                // Extract error message from response
                 let errorMessage = 'Đã xảy ra lỗi khi lưu thông tin người dùng';
 
                 if (error.response) {
-                    // Try to get a meaningful error message
                     if (typeof error.response.data === 'string') {
                         errorMessage = error.response.data;
                     } else if (error.response.data && error.response.data.errors) {
-                        // Extract validation errors
-                        const errors = error.response.data.errors;
-                        errorMessage = Object.values(errors).flat().join(', ');
+                        errorMessage = Object.values(error.response.data.errors).flat().join(', ');
                     } else if (error.response.data && error.response.data.message) {
                         errorMessage = error.response.data.message;
-                    } else if (error.response.data && typeof error.response.data === 'object') {
-                        // Convert object to string for better readability
-                        errorMessage = JSON.stringify(error.response.data);
                     }
                 }
 
